@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace muqsit\fakeplayer;
 
+use muqsit\fakeplayer\behaviour\FakePlayerBehaviour;
 use muqsit\fakeplayer\network\FakePlayerNetworkSession;
 use muqsit\fakeplayer\network\listener\ClosureFakePlayerPacketListener;
 use pocketmine\entity\Entity;
@@ -27,6 +28,9 @@ final class FakePlayer{
 
 	/** @var Vector3 */
 	private $motion;
+
+	/** @var FakePlayerBehaviour[] */
+	private $behaviours = [];
 
 	public function __construct(FakePlayerNetworkSession $session){
 		$this->session = $session;
@@ -54,31 +58,24 @@ final class FakePlayer{
 		return $this->session;
 	}
 
+	public function addBehaviour(FakePlayerBehaviour $behaviour) : void{
+		$this->behaviours[spl_object_id($behaviour)] = $behaviour;
+	}
+
+	public function removeBehaviour(FakePlayerBehaviour $behaviour) : void{
+		unset($this->behaviours[spl_object_id($behaviour)]);
+	}
+
 	public function tick() : void{
 		$this->doMovementUpdates();
-	}
-
-	private function getPlayerMotion() : Vector3{
-		/** @noinspection PhpUnhandledExceptionInspection */
-		$rp = new ReflectionProperty($this->player, "motion");
-		$rp->setAccessible(true);
-		return $rp->getValue($this->player);
-	}
-
-	private function setPlayerMotion() : void{
-		/** @noinspection PhpUnhandledExceptionInspection */
-		$rp = new ReflectionProperty($this->player, "motion");
-		$rp->setAccessible(true);
-		$rp->setValue($this->player, $this->motion->asVector3());
-	}
-
-	private function syncPlayerMotion() : void{
-		$this->motion = $this->getPlayerMotion()->asVector3();
 	}
 
 	private function doMovementUpdates() : void{
 		$this->setPlayerMotion();
 		$this->tryChangeMovement();
+		foreach($this->behaviours as $behaviour){
+			$behaviour->tick($this->player);
+		}
 		$this->syncPlayerMotion();
 
 		if($this->player->hasMovementUpdate()){
@@ -106,8 +103,28 @@ final class FakePlayer{
 				}else{
 					$this->motion = new Vector3();
 				}
+			}else{
+				$this->syncPlayerMotion();
 			}
 		}
+	}
+
+	private function getPlayerMotion() : Vector3{
+		/** @noinspection PhpUnhandledExceptionInspection */
+		$rp = new ReflectionProperty($this->player, "motion");
+		$rp->setAccessible(true);
+		return $rp->getValue($this->player);
+	}
+
+	private function setPlayerMotion() : void{
+		/** @noinspection PhpUnhandledExceptionInspection */
+		$rp = new ReflectionProperty($this->player, "motion");
+		$rp->setAccessible(true);
+		$rp->setValue($this->player, $this->motion->asVector3());
+	}
+
+	private function syncPlayerMotion() : void{
+		$this->motion = $this->getPlayerMotion()->asVector3();
 	}
 
 	private function tryChangeMovement() : void{

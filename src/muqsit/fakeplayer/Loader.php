@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace muqsit\fakeplayer;
 
 use InvalidArgumentException;
+use muqsit\fakeplayer\behaviour\FakePlayerBehaviourManager;
 use muqsit\fakeplayer\listener\FakePlayerListener;
 use muqsit\fakeplayer\network\FakePlayerNetworkSession;
 use pocketmine\entity\Skin;
@@ -28,9 +29,8 @@ final class Loader extends PluginBase implements Listener{
 		$cmd->init($this);
 		$this->getServer()->getCommandMap()->register($this->getName(), $cmd);
 
-		$this->registerListener(new DefaultFakePlayerListener());
-
-		$this->saveResource("players.json");
+		$this->registerListener(new DefaultFakePlayerListener($this));
+		FakePlayerBehaviourManager::registerDefaults($this);
 
 		$this->getScheduler()->scheduleRepeatingTask(new ClosureTask(function(int $currentTick) : void{
 			foreach($this->fake_players as $player){
@@ -38,12 +38,13 @@ final class Loader extends PluginBase implements Listener{
 			}
 		}), 1);
 
+		$this->saveResource("players.json");
 		$this->getScheduler()->scheduleDelayedTask(new ClosureTask(function(int $currentTick) : void{
 			$players = json_decode(file_get_contents($this->getDataFolder() . "players.json"), true, 512, JSON_THROW_ON_ERROR);
 
 			foreach($players as $uuid => $data){
 				["xuid" => $xuid, "gamertag" => $gamertag] = $data;
-				$this->addPlayer(UUID::fromString($uuid), $xuid, $gamertag, $data["extra_data"] ?? []);
+				$this->addPlayer(UUID::fromString($uuid), $xuid, $gamertag, $data["extra_data"] ?? [], $data["behaviours"] ?? []);
 			}
 		}), 1);
 	}
@@ -64,7 +65,7 @@ final class Loader extends PluginBase implements Listener{
 		return isset($this->fake_players[$player->getUniqueId()->toBinary()]);
 	}
 
-	public function addPlayer(UUID $uuid, string $xuid, string $username, array $extra_data) : Player{
+	public function addPlayer(UUID $uuid, string $xuid, string $username, array $extra_data, array $behaviours = []) : Player{
 		$_skin_data = $this->getResource("skin.rgba");
 		$skin_data = stream_get_contents($_skin_data);
 		fclose($_skin_data);
@@ -83,7 +84,10 @@ final class Loader extends PluginBase implements Listener{
 
 		$player = $session->getPlayer();
 		assert($player !== null);
-		$this->fake_players[$player->getUniqueId()->toBinary()] = new FakePlayer($session);
+		$this->fake_players[$player->getUniqueId()->toBinary()] = $fake_player = new FakePlayer($session);
+		foreach($behaviours as $behaviour){
+			$fake_player->addBehaviour(FakePlayerBehaviourManager::get($this, $behaviour));
+		}
 
 		foreach($this->listeners as $listener){
 			$listener->onPlayerAdd($player);

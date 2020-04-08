@@ -15,6 +15,9 @@
             "DeviceId": "ea78448a-6b33-3bbd-0e04-22dc3fb9f250",
             "DeviceModel": "PocketMine-MP",
             "DeviceOS": 7
-        }
+        },
+        "behaviours": [
+            "fakeplayer:pvp"
+        ]
     }
 }
