@@ -31,10 +31,9 @@ final class Loader extends PluginBase implements Listener{
 
 		$this->registerListener(new DefaultFakePlayerListener());
 
+		$this->saveResource("players.json");
 		$this->getScheduler()->scheduleDelayedTask(new ClosureTask(function(int $currentTick) : void{
-			$_players = $this->getResource("players.json");
-			$players = json_decode(stream_get_contents($_players), true, 512, JSON_THROW_ON_ERROR);
-			fclose($_players);
+			$players = json_decode(file_get_contents($this->getDataFolder() . "players.json"), true, 512, JSON_THROW_ON_ERROR);
 
 			foreach($players as $uuid => $data){
 				["xuid" => $xuid, "gamertag" => $gamertag] = $data;
