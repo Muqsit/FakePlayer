@@ -1,0 +1,8 @@
+--- # Poggit-CI Manifest. Open the CI at https://poggit.pmmp.io/ci/Muqsit/FakePlayer
+build-by-default: true
+branches:
+- master
+projects:
+  FakePlayer:
+    path: ""
+...
