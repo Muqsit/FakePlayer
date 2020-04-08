@@ -20,7 +20,7 @@ final class Loader extends PluginBase implements Listener{
 	/** @var FakePlayerListener[] */
 	private $listeners = [];
 
-	/** @var int[] */
+	/** @var FakePlayer[] */
 	private $fake_players = [];
 
 	protected function onEnable() : void{
@@ -31,6 +31,13 @@ final class Loader extends PluginBase implements Listener{
 		$this->registerListener(new DefaultFakePlayerListener());
 
 		$this->saveResource("players.json");
+
+		$this->getScheduler()->scheduleRepeatingTask(new ClosureTask(function(int $currentTick) : void{
+			foreach($this->fake_players as $player){
+				$player->tick();
+			}
+		}), 1);
+
 		$this->getScheduler()->scheduleDelayedTask(new ClosureTask(function(int $currentTick) : void{
 			$players = json_decode(file_get_contents($this->getDataFolder() . "players.json"), true, 512, JSON_THROW_ON_ERROR);
 
@@ -68,7 +75,7 @@ final class Loader extends PluginBase implements Listener{
 		$session = new FakePlayerNetworkSession($server, $network->getSessionManager(), new FakePacketSender(), $server->getIp(), $server->getPort());
 		$network->getSessionManager()->add($session);
 
-		$session->setPlayerInfo(new PlayerInfo($username, $uuid, new Skin("Standard_Custom", $skin_data), "en-US", $xuid, $extra_data));
+		$session->setPlayerInfo(new PlayerInfo($username, $uuid, new Skin("Standard_Custom", $skin_data), "en_US", $xuid, $extra_data));
 		$session->onLoginSuccess();
 		$session->onResourcePacksDone();
 		$session->getPlayer()->setViewDistance(4);
@@ -76,7 +83,7 @@ final class Loader extends PluginBase implements Listener{
 
 		$player = $session->getPlayer();
 		assert($player !== null);
-		$this->fake_players[$player->getUniqueId()->toBinary()] = $player->getId();
+		$this->fake_players[$player->getUniqueId()->toBinary()] = new FakePlayer($session);
 
 		foreach($this->listeners as $listener){
 			$listener->onPlayerAdd($player);

@@ -45,14 +45,11 @@ class FakePlayerNetworkSession extends NetworkSession{
 		}
 	}
 
-	public function sendDataPacket(ClientboundPacket $packet, bool $immediate = false) : bool{
-		if(parent::sendDataPacket($packet, $immediate)){
-			foreach($this->packet_listeners as $listener){
-				$listener->onPacketSend($packet, $this);
-			}
-			return true;
+	public function addToSendBuffer(ClientboundPacket $packet) : void{
+		parent::addToSendBuffer($packet);
+		foreach($this->packet_listeners as $listener){
+			$listener->onPacketSend($packet, $this);
 		}
-		return false;
 	}
 
 	public function onPlayerDestroyed(string $reason, bool $notify = true) : void{
