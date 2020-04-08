@@ -9,7 +9,7 @@ Similar to [Specter](https://github.com/falkirks/Specter), this plugin spawns pl
 When you first run this plugin, BoxierChimera37 will join the server. You can edit the `players.json` file to add as many players as you wish.
 Does this fake your server player count? Yes, but that's not the point of this plugin.<br>
 `players.json` structure:
-```json
+```jsonc
 {
 	"uuid-v4-string": {
 		"xuid": "required",
