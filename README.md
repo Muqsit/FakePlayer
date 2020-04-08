@@ -101,3 +101,7 @@ $session->registerSpecificPacketListener(TextPacket::class, new ClosureFakePlaye
 	}
 ));
 ```
+
+### Frequently Asked Questions
+Q. Does this work with encryption enabled?<br>
+A. ye
