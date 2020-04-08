@@ -9,7 +9,6 @@ use muqsit\fakeplayer\listener\FakePlayerListener;
 use muqsit\fakeplayer\network\FakePlayerNetworkSession;
 use pocketmine\entity\Skin;
 use pocketmine\event\Listener;
-use pocketmine\network\mcpe\PacketSender;
 use pocketmine\player\Player;
 use pocketmine\player\PlayerInfo;
 use pocketmine\plugin\PluginBase;
@@ -66,11 +65,7 @@ final class Loader extends PluginBase implements Listener{
 		$server = $this->getServer();
 		$network = $server->getNetwork();
 
-		$session = new FakePlayerNetworkSession($server, $network->getSessionManager(), new class implements PacketSender{
-			public function send(string $payload, bool $immediate) : void{}
-			public function close(string $reason = "unknown reason") : void{}
-		}, $server->getIp(), $server->getPort());
-
+		$session = new FakePlayerNetworkSession($server, $network->getSessionManager(), new FakePacketSender(), $server->getIp(), $server->getPort());
 		$network->getSessionManager()->add($session);
 
 		$session->setPlayerInfo(new PlayerInfo($username, $uuid, new Skin("Standard_Custom", $skin_data), "en-US", $xuid, $extra_data));
