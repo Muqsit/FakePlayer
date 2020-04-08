@@ -8,6 +8,7 @@ use muqsit\fakeplayer\network\FakePlayerNetworkSession;
 use muqsit\fakeplayer\network\listener\ClosureFakePlayerPacketListener;
 use pocketmine\entity\Entity;
 use pocketmine\entity\Human;
+use pocketmine\entity\Location;
 use pocketmine\math\Vector3;
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\ClientboundPacket;
@@ -34,6 +35,11 @@ final class FakePlayer{
 	}
 
 	private function init() : void{
+		/** @noinspection PhpUnhandledExceptionInspection */
+		$rp = new ReflectionProperty($this->player, "drag");
+		$rp->setAccessible(true);
+		$rp->setValue($this->player, $rp->getValue($this->player) * 8);
+
 		$this->player->keepMovement = false;
 		$this->motion = new Vector3();
 		$this->session->registerSpecificPacketListener(SetActorMotionPacket::class, new ClosureFakePlayerPacketListener(function(ClientboundPacket $packet, NetworkSession $session) : void{
@@ -89,13 +95,19 @@ final class FakePlayer{
 			}
 
 			if($this->motion->x != 0 or $this->motion->y != 0 or $this->motion->z != 0){
-				$this->setPlayerMotion();
+				$location = $this->player->getLocation();
+
 				$this->move($this->motion->x, $this->motion->y, $this->motion->z);
-				$this->syncPlayerMotion();
+
+				$new_location = $this->player->getLocation();
+				$this->setPlayerLocation($location);
+				if($this->player->updateNextPosition($new_location)){
+					$this->syncPlayerMotion();
+				}else{
+					$this->motion = new Vector3();
+				}
 			}
 		}
-
-		$this->updateMovement();
 	}
 
 	private function tryChangeMovement() : void{
@@ -107,13 +119,11 @@ final class FakePlayer{
 		$reflection_method->getClosure($this->player)();
 	}
 
-	private function updateMovement() : void{
-		static $reflection_method = null;
-		if($reflection_method === null){
-			$reflection_method = new ReflectionMethod(Human::class, "updateMovement");
-			$reflection_method->setAccessible(true);
-		}
-		$reflection_method->getClosure($this->player)();
+	private function setPlayerLocation(Location $location) : void{
+		/** @noinspection PhpUnhandledExceptionInspection */
+		$rp = new ReflectionProperty($this->player, "location");
+		$rp->setAccessible(true);
+		$rp->setValue($this->player, $location->asLocation());
 	}
 
 	private function move(float $dx, float $dy, float $dz) : void{
