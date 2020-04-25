@@ -9,12 +9,13 @@ Similar to [Specter](https://github.com/falkirks/Specter), this plugin spawns pl
 When you first run this plugin, BoxierChimera37 will join the server. You can edit the `players.json` file to add as many players as you wish.
 Does this fake your server player count? Yes, but that's not the point of this plugin.<br>
 `players.json` structure:
-```json
+```jsonc
 {
 	"uuid-v4-string": {
 		"xuid": "required",
 		"gamertag": "required",
-		"extra_data': {} // this field is OPTIONAL
+		"extra_data": {} // this field is OPTIONAL
+		"behaviours": [] // this field is OPTIONAL
 	}
 }
 ```
@@ -101,6 +102,16 @@ $session->registerSpecificPacketListener(TextPacket::class, new ClosureFakePlaye
 	}
 ));
 ```
+
+### Fake Player Behaviours
+Behaviours are basically a way you can do anything you like on a fake player every tick.
+By default, there's a `fakeplayer:pvp` behaviour which makes the fake player fight all living entities except non-survival mode players.
+You can add multiple behaviours to a fake player. Make sure to register your custom behaviours during `PluginBase::onEnable()`.<br>
+To register a fake player behaviour:
+```php
+FakePlayerBehaviourManager::register("myplugin:cool_ai", MyCoolAIThatImplementsFakePlayerBehaviour::class);
+```
+To add a behaviour to a player, pass it during `Loader::addPlayer()` OR specify it in the `players.json` file.
 
 ### Frequently Asked Questions
 Q. Does this work with encryption enabled?<br>
