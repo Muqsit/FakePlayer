@@ -10,11 +10,14 @@ use muqsit\fakeplayer\listener\FakePlayerListener;
 use muqsit\fakeplayer\network\FakePlayerNetworkSession;
 use pocketmine\entity\Skin;
 use pocketmine\event\Listener;
+use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\player\Player;
 use pocketmine\player\PlayerInfo;
 use pocketmine\plugin\PluginBase;
 use pocketmine\scheduler\ClosureTask;
 use pocketmine\utils\UUID;
+use ReflectionMethod;
+use ReflectionProperty;
 
 final class Loader extends PluginBase implements Listener{
 
@@ -46,7 +49,7 @@ final class Loader extends PluginBase implements Listener{
 				["xuid" => $xuid, "gamertag" => $gamertag] = $data;
 				$this->addPlayer(UUID::fromString($uuid), $xuid, $gamertag, $data["extra_data"] ?? [], $data["behaviours"] ?? []);
 			}
-		}), 1);
+		}), 20);
 	}
 
 	public function registerListener(FakePlayerListener $listener) : void{
@@ -76,9 +79,18 @@ final class Loader extends PluginBase implements Listener{
 		$session = new FakePlayerNetworkSession($server, $network->getSessionManager(), new FakePacketSender(), $server->getIp(), $server->getPort());
 		$network->getSessionManager()->add($session);
 
-		$session->setPlayerInfo(new PlayerInfo($username, $uuid, new Skin("Standard_Custom", $skin_data), "en_US", $xuid, $extra_data));
-		$session->onLoginSuccess();
-		$session->onResourcePacksDone();
+		$rp = new ReflectionProperty(NetworkSession::class, "info");
+		$rp->setAccessible(true);
+		$rp->setValue($session, new PlayerInfo($username, $uuid, new Skin("Standard_Custom", $skin_data), "en_US", $xuid, $extra_data));
+
+		$rp = new ReflectionMethod(NetworkSession::class, "onLoginSuccess");
+		$rp->setAccessible(true);
+		$rp->invoke($session);
+
+		$rp = new ReflectionMethod(NetworkSession::class, "onResourcePacksDone");
+		$rp->setAccessible(true);
+		$rp->invoke($session);
+
 		$session->getPlayer()->setViewDistance(4);
 		$session->onSpawn();
 

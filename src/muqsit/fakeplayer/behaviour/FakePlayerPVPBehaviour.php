@@ -67,8 +67,10 @@ class FakePlayerPVPBehaviour implements FakePlayerBehaviour{
 						$x = $nearest_player_pos->x - $pos->x;
 						$z = $nearest_player_pos->z - $pos->z;
 						$xz_modulus = sqrt($x * $x + $z * $z);
-						$y = ($nearest_player_pos->y - $pos->y) / 16;
-						$player->setMotion(new Vector3(0.4 * ($x / $xz_modulus), $y, 0.4 * ($z / $xz_modulus)));
+						if($xz_modulus > 0.0){
+							$y = ($nearest_player_pos->y - $pos->y) / 16;
+							$player->setMotion(new Vector3(0.4 * ($x / $xz_modulus), $y, 0.4 * ($z / $xz_modulus)));
+						}
 					}
 					$player->lookAt($nearest_player_pos);
 					if($least_dist <= (mt_rand(1200, 1600) * 0.01)){
