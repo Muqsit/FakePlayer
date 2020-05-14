@@ -17,7 +17,7 @@ use pocketmine\player\Player;
 use pocketmine\player\PlayerInfo;
 use pocketmine\plugin\PluginBase;
 use pocketmine\scheduler\ClosureTask;
-use pocketmine\utils\UUID;
+use pocketmine\uuid\UUID;
 use ReflectionMethod;
 use ReflectionProperty;
 
@@ -70,6 +70,14 @@ final class Loader extends PluginBase implements Listener{
 		return isset($this->fake_players[$player->getUniqueId()->toBinary()]);
 	}
 
+	/**
+	 * @param UUID $uuid
+	 * @param string $xuid
+	 * @param string $username
+	 * @param array<string, mixed> $extra_data
+	 * @param string[] $behaviours
+	 * @return Player
+	 */
 	public function addPlayer(UUID $uuid, string $xuid, string $username, array $extra_data, array $behaviours = []) : Player{
 		$_skin_data = $this->getResource("skin.rgba");
 		$skin_data = stream_get_contents($_skin_data);

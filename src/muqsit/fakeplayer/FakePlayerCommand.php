@@ -8,14 +8,14 @@ use muqsit\fakeplayer\network\FakePlayerNetworkSession;
 use muqsit\fakeplayer\network\listener\ClosureFakePlayerPacketListener;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
-use pocketmine\command\PluginIdentifiableCommand;
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\ClientboundPacket;
 use pocketmine\network\mcpe\protocol\TextPacket;
 use pocketmine\plugin\Plugin;
+use pocketmine\plugin\PluginOwned;
 use pocketmine\utils\TextFormat;
 
-final class FakePlayerCommand extends Command implements PluginIdentifiableCommand{
+final class FakePlayerCommand extends Command implements PluginOwned{
 
 	/** @var Loader */
 	private $plugin;
@@ -24,7 +24,7 @@ final class FakePlayerCommand extends Command implements PluginIdentifiableComma
 		$this->plugin = $plugin;
 	}
 
-	public function getPlugin() : Plugin{
+	public function getOwningPlugin() : Plugin{
 		return $this->plugin;
 	}
 

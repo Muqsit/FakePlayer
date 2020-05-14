@@ -9,7 +9,10 @@ use pocketmine\utils\Utils;
 
 final class FakePlayerBehaviourManager{
 
-	/** @var string[]|FakePlayerBehaviour[] */
+	/**
+	 * @var string[]|FakePlayerBehaviour[]
+	 * @phpstan-var class-string<FakePlayerBehaviour>[]
+	 */
 	private static $behaviours = [];
 
 	public static function registerDefaults(Loader $plugin) : void{
