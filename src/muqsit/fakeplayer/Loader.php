@@ -37,14 +37,14 @@ final class Loader extends PluginBase implements Listener{
 		$this->registerListener(new DefaultFakePlayerListener($this));
 		FakePlayerBehaviourManager::registerDefaults($this);
 
-		$this->getScheduler()->scheduleRepeatingTask(new ClosureTask(function(int $currentTick) : void{
+		$this->getScheduler()->scheduleRepeatingTask(new ClosureTask(function() : void{
 			foreach($this->fake_players as $player){
 				$player->tick();
 			}
 		}), 1);
 
 		$this->saveResource("players.json");
-		$this->getScheduler()->scheduleDelayedTask(new ClosureTask(function(int $currentTick) : void{
+		$this->getScheduler()->scheduleDelayedTask(new ClosureTask(function() : void{
 			$players = json_decode(file_get_contents($this->getDataFolder() . "players.json"), true, 512, JSON_THROW_ON_ERROR);
 
 			foreach($players as $uuid => $data){

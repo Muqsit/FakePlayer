@@ -27,7 +27,7 @@ final class DefaultFakePlayerListener implements FakePlayerListener{
 		assert($session instanceof FakePlayerNetworkSession);
 
 		$session->registerSpecificPacketListener(RespawnPacket::class, new ClosureFakePlayerPacketListener(function(ClientboundPacket $packet, NetworkSession $session) : void{
-			$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(static function(int $currentTick) use($session) : void{
+			$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(static function() use($session) : void{
 				if($session->isConnected()){
 					$session->getPlayer()->respawn();
 				}
