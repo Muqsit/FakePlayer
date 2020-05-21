@@ -102,7 +102,9 @@ final class Loader extends PluginBase implements Listener{
 		$rp->invoke($session);
 
 		$session->getPlayer()->setViewDistance(4);
-		$session->onSpawn();
+		$rp = new ReflectionMethod(NetworkSession::class, "onSpawn");
+		$rp->setAccessible(true);
+		$rp->invoke($session);
 
 		$player = $session->getPlayer();
 		assert($player !== null);
