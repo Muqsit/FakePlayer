@@ -45,7 +45,7 @@ final class FakePlayer{
 		$rp->setValue($this->player, $rp->getValue($this->player) * 8);
 
 		$this->player->keepMovement = false;
-		$this->motion = new Vector3();
+		$this->motion = new Vector3(0.0, 0.0, 0.0);
 		$this->session->registerSpecificPacketListener(SetActorMotionPacket::class, new ClosureFakePlayerPacketListener(function(ClientboundPacket $packet, NetworkSession $session) : void{
 			/** @var SetActorMotionPacket $packet */
 			if($packet->entityRuntimeId === $this->player->getId()){
@@ -101,7 +101,7 @@ final class FakePlayer{
 				if($this->player->updateNextPosition($new_location)){
 					$this->syncPlayerMotion();
 				}else{
-					$this->motion = new Vector3();
+					$this->motion = new Vector3(0.0, 0.0, 0.0);
 				}
 			}else{
 				$this->syncPlayerMotion();
