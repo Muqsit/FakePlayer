@@ -20,12 +20,23 @@ class FakePlayerPVPBehaviour implements FakePlayerBehaviour{
 	/** @var int */
 	private $last_check = 0;
 
+	/** @var int|null */
+	private $target_entity_id;
+
 	public function init(Loader $plugin) : void{
 		$this->plugin = $plugin;
 	}
 
 	protected function isValidTarget(Entity $entity) : bool{
 		return $entity instanceof Living && (!($entity instanceof Player) || (!$this->plugin->isFakePlayer($entity) && $entity->getGamemode()->equals(GameMode::SURVIVAL())));
+	}
+
+	protected function getTargetEntity(Player $player) : ?Entity{
+		return $this->target_entity_id !== null ? $player->getWorld()->getEntity($this->target_entity_id) : null;
+	}
+
+	protected function setTargetEntity(?Entity $target) : void{
+		$this->target_entity_id = $target !== null ? $target->getId() : null;
 	}
 
 	public function tick(Player $player) : void{
@@ -46,17 +57,17 @@ class FakePlayerPVPBehaviour implements FakePlayerBehaviour{
 						}
 					}
 					if($nearest_entity !== null){
-						$player->setTargetEntity($nearest_entity);
+						$this->setTargetEntity($nearest_entity);
 						$this->last_check = $player->ticksLived;
 					}
 				}else{
-					$nearest_entity = $player->getTargetEntity();
+					$nearest_entity = $this->getTargetEntity($player);
 					if($nearest_entity !== null){
 						if($this->isValidTarget($nearest_entity)){
 							$least_dist = $pos->distanceSquared($nearest_entity->getLocation());
 						}else{
 							$nearest_entity = null;
-							$player->setTargetEntity(null);
+							$this->setTargetEntity(null);
 						}
 					}
 				}
