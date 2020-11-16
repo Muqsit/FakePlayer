@@ -103,7 +103,7 @@ final class Loader extends PluginBase implements Listener{
 		$rp->setAccessible(true);
 		$rp->setValue($session, new XboxLivePlayerInfo($xuid, $username, $uuid, $skin, "en_US", $extra_data));
 
-		$rp = new ReflectionMethod(NetworkSession::class, "onLoginSuccess");
+		$rp = new ReflectionMethod(NetworkSession::class, "onServerLoginSuccess");
 		$rp->setAccessible(true);
 		$rp->invoke($session);
 
