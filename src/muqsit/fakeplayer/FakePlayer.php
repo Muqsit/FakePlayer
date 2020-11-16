@@ -62,6 +62,13 @@ final class FakePlayer{
 		$this->behaviours[spl_object_id($behaviour)] = $behaviour;
 	}
 
+	/**
+	 * @return FakePlayerBehaviour[]
+	 */
+	public function getBehaviours() : array{
+		return $this->behaviours;
+	}
+
 	public function removeBehaviour(FakePlayerBehaviour $behaviour) : void{
 		unset($this->behaviours[spl_object_id($behaviour)]);
 	}

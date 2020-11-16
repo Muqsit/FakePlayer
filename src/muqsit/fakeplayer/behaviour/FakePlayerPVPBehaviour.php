@@ -15,20 +15,23 @@ use pocketmine\player\Player;
 class FakePlayerPVPBehaviour implements FakePlayerBehaviour{
 
 	/** @var Loader */
-	private $plugin;
+	protected $plugin;
 
 	/** @var int */
-	private $last_check = 0;
+	protected $last_check = 0;
 
 	/** @var int|null */
-	private $target_entity_id;
+	protected $target_entity_id;
+
+	/** @var int */
+	protected $last_movement = 0;
 
 	public function init(Loader $plugin) : void{
 		$this->plugin = $plugin;
 	}
 
-	protected function isValidTarget(Entity $entity) : bool{
-		return $entity instanceof Living && (!($entity instanceof Player) || (!$this->plugin->isFakePlayer($entity) && $entity->getGamemode()->equals(GameMode::SURVIVAL())));
+	protected function isValidTarget(Player $player, Entity $entity) : bool{
+		return $entity !== $player && $entity instanceof Living && (!($entity instanceof Player) || ($entity->getGamemode()->equals(GameMode::SURVIVAL()) && $entity->isOnline()));
 	}
 
 	protected function getTargetEntity(Player $player) : ?Entity{
@@ -39,20 +42,35 @@ class FakePlayerPVPBehaviour implements FakePlayerBehaviour{
 		$this->target_entity_id = $target !== null ? $target->getId() : null;
 	}
 
+	public function onRespawn(Player $player) : void{
+	}
+
 	public function tick(Player $player) : void{
 		if($player->onGround && $player->isAlive()){
 			$motion = $player->getMotion();
 			if($motion->y === -0.0672){
+				if($player->ticksLived - $this->last_movement > 500){
+					$pos = $player->getSpawn()->asPosition();
+					$pos->x += 3 * (lcg_value() * 2 - 1);
+					$pos->z += 3 * (lcg_value() * 2 - 1);
+					$player->teleport($pos);
+					$this->last_movement = $player->ticksLived;
+					return;
+				}
+
 				$pos = $player->getPosition()->asVector3();
 				$least_dist = INF;
 				if($player->ticksLived - $this->last_check >= 50){
 					$nearest_entity = null;
 					foreach($player->getWorld()->getNearbyEntities(AxisAlignedBB::one()->expand(8, 16, 8)->offset($pos->x, $pos->y, $pos->z)) as $entity){
-						if($this->isValidTarget($entity)){
+						if($this->isValidTarget($player, $entity)){
 							$dist = $pos->distanceSquared($entity->getPosition());
 							if($dist < $least_dist){
 								$nearest_entity = $entity;
 								$least_dist = $dist;
+								if(mt_rand(1, 3) === 1){
+									break;
+								}
 							}
 						}
 					}
@@ -63,7 +81,7 @@ class FakePlayerPVPBehaviour implements FakePlayerBehaviour{
 				}else{
 					$nearest_entity = $this->getTargetEntity($player);
 					if($nearest_entity !== null){
-						if($this->isValidTarget($nearest_entity)){
+						if($this->isValidTarget($player, $nearest_entity)){
 							$least_dist = $pos->distanceSquared($nearest_entity->getLocation());
 						}else{
 							$nearest_entity = null;
@@ -75,12 +93,12 @@ class FakePlayerPVPBehaviour implements FakePlayerBehaviour{
 				if($nearest_entity !== null && $least_dist <= 256){
 					$nearest_player_pos = $nearest_entity->getPosition();
 					if($least_dist > ($nearest_entity->width + 6.25)){
-						$x = $nearest_player_pos->x - $pos->x;
-						$z = $nearest_player_pos->z - $pos->z;
+						$x = ($nearest_player_pos->x - $pos->x) + (lcg_value() * 2 - 1);
+						$z = ($nearest_player_pos->z - $pos->z) + (lcg_value() * 2 - 1);
 						$xz_modulus = sqrt($x * $x + $z * $z);
 						if($xz_modulus > 0.0){
 							$y = ($nearest_player_pos->y - $pos->y) / 16;
-							$player->setMotion(new Vector3(0.4 * ($x / $xz_modulus), $y, 0.4 * ($z / $xz_modulus)));
+							$this->setMotion($player, 0.4 * ($x / $xz_modulus), $y, 0.4 * ($z / $xz_modulus));
 						}
 					}
 					$player->lookAt($nearest_player_pos);
@@ -90,5 +108,10 @@ class FakePlayerPVPBehaviour implements FakePlayerBehaviour{
 				}
 			}
 		}
+	}
+
+	private function setMotion(Player $player, float $x, float $y, float $z) : void{
+		$player->setMotion(new Vector3($x, $y, $z));
+		$this->last_movement = $player->ticksLived;
 	}
 }

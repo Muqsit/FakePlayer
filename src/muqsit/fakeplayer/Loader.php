@@ -14,7 +14,7 @@ use pocketmine\network\mcpe\compression\ZlibCompressor;
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\PacketPool;
 use pocketmine\player\Player;
-use pocketmine\player\PlayerInfo;
+use pocketmine\player\XboxLivePlayerInfo;
 use pocketmine\plugin\PluginBase;
 use pocketmine\scheduler\ClosureTask;
 use pocketmine\uuid\UUID;
@@ -47,9 +47,14 @@ final class Loader extends PluginBase implements Listener{
 		$this->getScheduler()->scheduleDelayedTask(new ClosureTask(function() : void{
 			$players = json_decode(file_get_contents($this->getDataFolder() . "players.json"), true, 512, JSON_THROW_ON_ERROR);
 
+			$_skin_data = $this->getResource("skin.rgba");
+			$skin_data = stream_get_contents($_skin_data);
+			fclose($_skin_data);
+			$skin = new Skin("Standard_Custom", $skin_data);
+
 			foreach($players as $uuid => $data){
 				["xuid" => $xuid, "gamertag" => $gamertag] = $data;
-				$this->addPlayer(UUID::fromString($uuid), $xuid, $gamertag, $data["extra_data"] ?? [], $data["behaviours"] ?? []);
+				$this->addPlayer(UUID::fromString($uuid), $xuid, $gamertag, $skin, $data["extra_data"] ?? [], $data["behaviours"] ?? []);
 			}
 		}), 20);
 	}
@@ -70,15 +75,20 @@ final class Loader extends PluginBase implements Listener{
 		return isset($this->fake_players[$player->getUniqueId()->toBinary()]);
 	}
 
+	public function getFakePlayer(Player $player) : ?FakePlayer{
+		return $this->fake_players[$player->getUniqueId()->toBinary()] ?? null;
+	}
+
 	/**
 	 * @param UUID $uuid
 	 * @param string $xuid
 	 * @param string $username
+	 * @param Skin $skin
 	 * @param array<string, mixed> $extra_data
 	 * @param string[] $behaviours
 	 * @return Player
 	 */
-	public function addPlayer(UUID $uuid, string $xuid, string $username, array $extra_data, array $behaviours = []) : Player{
+	public function addPlayer(UUID $uuid, string $xuid, string $username, Skin $skin, array $extra_data, array $behaviours = []) : Player{
 		$_skin_data = $this->getResource("skin.rgba");
 		$skin_data = stream_get_contents($_skin_data);
 		fclose($_skin_data);
@@ -91,20 +101,17 @@ final class Loader extends PluginBase implements Listener{
 
 		$rp = new ReflectionProperty(NetworkSession::class, "info");
 		$rp->setAccessible(true);
-		$rp->setValue($session, new PlayerInfo($username, $uuid, new Skin("Standard_Custom", $skin_data), "en_US", $xuid, $extra_data));
+		$rp->setValue($session, new XboxLivePlayerInfo($xuid, $username, $uuid, $skin, "en_US", $extra_data));
 
 		$rp = new ReflectionMethod(NetworkSession::class, "onLoginSuccess");
 		$rp->setAccessible(true);
 		$rp->invoke($session);
 
-		$rp = new ReflectionMethod(NetworkSession::class, "onResourcePacksDone");
+		$rp = new ReflectionMethod(NetworkSession::class, "beginSpawnSequence");
 		$rp->setAccessible(true);
 		$rp->invoke($session);
 
 		$session->getPlayer()->setViewDistance(4);
-		$rp = new ReflectionMethod(NetworkSession::class, "onSpawn");
-		$rp->setAccessible(true);
-		$rp->invoke($session);
 
 		$player = $session->getPlayer();
 		assert($player !== null);
@@ -115,6 +122,10 @@ final class Loader extends PluginBase implements Listener{
 
 		foreach($this->listeners as $listener){
 			$listener->onPlayerAdd($player);
+		}
+
+		if(!$player->isAlive()){
+			$player->respawn();
 		}
 
 		return $player;

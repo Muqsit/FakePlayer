@@ -11,8 +11,10 @@ use pocketmine\command\CommandSender;
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\ClientboundPacket;
 use pocketmine\network\mcpe\protocol\TextPacket;
+use pocketmine\player\Player;
 use pocketmine\plugin\Plugin;
 use pocketmine\plugin\PluginOwned;
+use pocketmine\Server;
 use pocketmine\utils\TextFormat;
 
 final class FakePlayerCommand extends Command implements PluginOwned{
@@ -29,42 +31,59 @@ final class FakePlayerCommand extends Command implements PluginOwned{
 	}
 
 	public function execute(CommandSender $sender, string $commandLabel, array $args){
-		if(isset($args[0], $args[1])){
-			$player = $this->plugin->getServer()->getPlayer($args[0]);
-			if($player !== null){
-				if($this->plugin->isFakePlayer($player)){
-					/** @var FakePlayerNetworkSession $session */
-					$session = $player->getNetworkSession();
-					switch($args[1]){
-						case "chat":
-							if(isset($args[2])){
-								$chat = implode(" ", array_slice($args, 2)); // TODO: use a method that complies with arg containing spaces
-
-								$session->registerSpecificPacketListener(TextPacket::class, $listener = new ClosureFakePlayerPacketListener(static function(ClientboundPacket $packet, NetworkSession $session) use($sender) : void{
-									/** @var TextPacket $packet */
-									if($packet->type !== TextPacket::TYPE_JUKEBOX_POPUP && $packet->type !== TextPacket::TYPE_POPUP && $packet->type !== TextPacket::TYPE_TIP){
-										$sender->sendMessage($packet->message);
-									}
-								}));
-								$player->chat($chat);
-								$session->unregisterSpecificPacketListener(TextPacket::class, $listener);
-							}else{
-								$sender->sendMessage(TextFormat::RED . "Usage: /" . $commandLabel . " " . $player->getName() . " " . $args[1] . " <...chat>");
+		if(isset($args[0])){
+			switch($args[0]){
+				case "tpall":
+					if($sender instanceof Player){
+						$pos = $sender->getPosition();
+						foreach($this->plugin->getServer()->getOnlinePlayers() as $player){
+							if($this->plugin->isFakePlayer($player)){
+								$player->teleport($pos->add(8 * (lcg_value() * 2 - 1), 0.0, 8 * (lcg_value() * 2 - 1)));
 							}
-							return;
+						}
 					}
-				}else{
-					$sender->sendMessage(TextFormat::RED . $player->getName() . " is NOT a fake player!");
 					return;
-				}
-			}else{
-				$sender->sendMessage(TextFormat::RED . $args[0] . " is NOT online!");
-				return;
+				default:
+					if(isset($args[1])){
+						$player = $this->plugin->getServer()->getPlayerByPrefix($args[0]);
+						if($player !== null){
+							if($this->plugin->isFakePlayer($player)){
+								/** @var FakePlayerNetworkSession $session */
+								$session = $player->getNetworkSession();
+								switch($args[1]){
+									case "chat":
+										if(isset($args[2])){
+											$chat = implode(" ", array_slice($args, 2)); // TODO: use a method that complies with arg containing spaces
+
+											$session->registerSpecificPacketListener(TextPacket::class, $listener = new ClosureFakePlayerPacketListener(static function(ClientboundPacket $packet, NetworkSession $session) use($sender) : void{
+												/** @var TextPacket $packet */
+												if($packet->type !== TextPacket::TYPE_JUKEBOX_POPUP && $packet->type !== TextPacket::TYPE_POPUP && $packet->type !== TextPacket::TYPE_TIP){
+													$sender->sendMessage($packet->message);
+												}
+											}));
+											$player->chat($chat);
+											$session->unregisterSpecificPacketListener(TextPacket::class, $listener);
+										}else{
+											$sender->sendMessage(TextFormat::RED . "Usage: /" . $commandLabel . " " . $player->getName() . " " . $args[1] . " <...chat>");
+										}
+										return;
+								}
+							}else{
+								$sender->sendMessage(TextFormat::RED . $player->getName() . " is NOT a fake player!");
+								return;
+							}
+						}else{
+							$sender->sendMessage(TextFormat::RED . $args[0] . " is NOT online!");
+							return;
+						}
+					}
+					break;
 			}
 		}
 
 		$sender->sendMessage(
 			TextFormat::AQUA . TextFormat::BOLD . $this->plugin->getName() . " Commands" . TextFormat::RESET . TextFormat::EOL .
+			TextFormat::AQUA . "/" . $commandLabel . " tpall" . TextFormat::GRAY . " - Teleport all fake players to you" . TextFormat::EOL .
 			TextFormat::AQUA . "/" . $commandLabel . " <player> chat <...chat>" . TextFormat::GRAY . " - Chat on behalf of a fake player"
 		);
 	}
