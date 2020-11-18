@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace muqsit\fakeplayer\network;
 
-use muqsit\fakeplayer\Loader;
 use muqsit\fakeplayer\network\listener\FakePlayerPacketListener;
 use muqsit\fakeplayer\network\listener\FakePlayerSpecificPacketListener;
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\ClientboundPacket;
-use pocketmine\Server;
 
 class FakePlayerNetworkSession extends NetworkSession{
 
@@ -50,13 +48,5 @@ class FakePlayerNetworkSession extends NetworkSession{
 		foreach($this->packet_listeners as $listener){
 			$listener->onPacketSend($packet, $this);
 		}
-	}
-
-	public function onPlayerDestroyed(string $reason, bool $notify = true) : void{
-		parent::onPlayerDestroyed($reason);
-
-		/** @var Loader $loader */
-		$loader = Server::getInstance()->getPluginManager()->getPlugin("FakePlayer");
-		$loader->removePlayer($this->getPlayer(), false);
 	}
 }

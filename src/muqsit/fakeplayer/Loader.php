@@ -10,6 +10,7 @@ use muqsit\fakeplayer\listener\FakePlayerListener;
 use muqsit\fakeplayer\network\FakePlayerNetworkSession;
 use pocketmine\entity\Skin;
 use pocketmine\event\Listener;
+use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\network\mcpe\compression\ZlibCompressor;
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\PacketPool;
@@ -57,6 +58,7 @@ final class Loader extends PluginBase implements Listener{
 				$this->addPlayer(UUID::fromString($uuid), $xuid, $gamertag, $skin, $data["extra_data"] ?? [], $data["behaviours"] ?? []);
 			}
 		}), 20);
+		$this->getServer()->getPluginManager()->registerEvents($this, $this);
 	}
 
 	public function registerListener(FakePlayerListener $listener) : void{
@@ -143,6 +145,18 @@ final class Loader extends PluginBase implements Listener{
 
 		foreach($this->listeners as $listener){
 			$listener->onPlayerRemove($player);
+		}
+	}
+
+	/**
+	 * @param PlayerQuitEvent $event
+	 * @priority MONITOR
+	 */
+	public function onPlayerQuit(PlayerQuitEvent $event) : void{
+		$player = $event->getPlayer();
+		try{
+			$this->removePlayer($player, false);
+		}catch(InvalidArgumentException $e){
 		}
 	}
 }
