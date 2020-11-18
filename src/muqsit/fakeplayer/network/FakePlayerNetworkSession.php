@@ -53,7 +53,7 @@ class FakePlayerNetworkSession extends NetworkSession{
 	}
 
 	public function onPlayerDestroyed(string $reason, bool $notify = true) : void{
-		parent::onPlayerDestroyed($reason, $notify);
+		parent::onPlayerDestroyed($reason);
 
 		/** @var Loader $loader */
 		$loader = Server::getInstance()->getPluginManager()->getPlugin("FakePlayer");
