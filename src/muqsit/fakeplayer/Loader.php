@@ -14,6 +14,7 @@ use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\network\mcpe\compression\ZlibCompressor;
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\PacketPool;
+use pocketmine\network\mcpe\StandardPacketBroadcaster;
 use pocketmine\player\Player;
 use pocketmine\player\XboxLivePlayerInfo;
 use pocketmine\plugin\PluginBase;
@@ -98,7 +99,7 @@ final class Loader extends PluginBase implements Listener{
 		$server = $this->getServer();
 		$network = $server->getNetwork();
 
-		$session = new FakePlayerNetworkSession($server, $network->getSessionManager(), PacketPool::getInstance(), new FakePacketSender(), ZlibCompressor::getInstance(), $server->getIp(), $server->getPort());
+		$session = new FakePlayerNetworkSession($server, $network->getSessionManager(), PacketPool::getInstance(), new FakePacketSender(), new StandardPacketBroadcaster($server), ZlibCompressor::getInstance(), $server->getIp(), $server->getPort());
 		$network->getSessionManager()->add($session);
 
 		$rp = new ReflectionProperty(NetworkSession::class, "info");
