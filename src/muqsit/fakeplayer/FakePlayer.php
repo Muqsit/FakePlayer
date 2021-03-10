@@ -105,7 +105,7 @@ final class FakePlayer{
 
 				$new_location = $this->player->getLocation();
 				$this->setPlayerLocation($location);
-				if($this->player->updateNextPosition($new_location)){
+				if($this->player->handleMovement($new_location)){
 					$this->syncPlayerMotion();
 				}else{
 					$this->motion = new Vector3(0.0, 0.0, 0.0);
