@@ -106,9 +106,8 @@ final class FakePlayer{
 				$new_location = $this->player->getLocation();
 				$this->setPlayerLocation($location);
 				$this->player->handleMovement($new_location);
-			}else{
-				$this->syncPlayerMotion();
 			}
+			$this->syncPlayerMotion();
 		}
 	}
 
