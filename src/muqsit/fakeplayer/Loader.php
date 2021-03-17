@@ -19,7 +19,8 @@ use pocketmine\player\Player;
 use pocketmine\player\XboxLivePlayerInfo;
 use pocketmine\plugin\PluginBase;
 use pocketmine\scheduler\ClosureTask;
-use pocketmine\uuid\UUID;
+use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 use ReflectionMethod;
 use ReflectionProperty;
 
@@ -56,7 +57,7 @@ final class Loader extends PluginBase implements Listener{
 
 			foreach($players as $uuid => $data){
 				["xuid" => $xuid, "gamertag" => $gamertag] = $data;
-				$this->addPlayer(UUID::fromString($uuid), $xuid, $gamertag, $skin, $data["extra_data"] ?? [], $data["behaviours"] ?? []);
+				$this->addPlayer(Uuid::fromString($uuid), $xuid, $gamertag, $skin, $data["extra_data"] ?? [], $data["behaviours"] ?? []);
 			}
 		}), 20);
 		$this->getServer()->getPluginManager()->registerEvents($this, $this);
@@ -75,15 +76,15 @@ final class Loader extends PluginBase implements Listener{
 	}
 
 	public function isFakePlayer(Player $player) : bool{
-		return isset($this->fake_players[$player->getUniqueId()->toBinary()]);
+		return isset($this->fake_players[$player->getUniqueId()->getBytes()]);
 	}
 
 	public function getFakePlayer(Player $player) : ?FakePlayer{
-		return $this->fake_players[$player->getUniqueId()->toBinary()] ?? null;
+		return $this->fake_players[$player->getUniqueId()->getBytes()] ?? null;
 	}
 
 	/**
-	 * @param UUID $uuid
+	 * @param UuidInterface $uuid
 	 * @param string $xuid
 	 * @param string $username
 	 * @param Skin $skin
@@ -91,7 +92,7 @@ final class Loader extends PluginBase implements Listener{
 	 * @param string[] $behaviours
 	 * @return Player
 	 */
-	public function addPlayer(UUID $uuid, string $xuid, string $username, Skin $skin, array $extra_data, array $behaviours = []) : Player{
+	public function addPlayer(UuidInterface $uuid, string $xuid, string $username, Skin $skin, array $extra_data, array $behaviours = []) : Player{
 		$_skin_data = $this->getResource("skin.rgba");
 		$skin_data = stream_get_contents($_skin_data);
 		fclose($_skin_data);
@@ -118,7 +119,7 @@ final class Loader extends PluginBase implements Listener{
 
 		$player = $session->getPlayer();
 		assert($player !== null);
-		$this->fake_players[$player->getUniqueId()->toBinary()] = $fake_player = new FakePlayer($session);
+		$this->fake_players[$player->getUniqueId()->getBytes()] = $fake_player = new FakePlayer($session);
 		foreach($behaviours as $behaviour){
 			$fake_player->addBehaviour(FakePlayerBehaviourManager::get($this, $behaviour));
 		}
@@ -139,7 +140,7 @@ final class Loader extends PluginBase implements Listener{
 			throw new InvalidArgumentException("Invalid Player supplied, expected a fake player, got " . $player->getName());
 		}
 
-		unset($this->fake_players[$player->getUniqueId()->toBinary()]);
+		unset($this->fake_players[$player->getUniqueId()->getBytes()]);
 		if($disconnect){
 			$player->disconnect("Removed");
 		}

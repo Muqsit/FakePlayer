@@ -92,7 +92,7 @@ class FakePlayerPVPBehaviour implements FakePlayerBehaviour{
 
 				if($nearest_entity !== null && $least_dist <= 256){
 					$nearest_player_pos = $nearest_entity->getPosition();
-					if($least_dist > ($nearest_entity->width + 6.25)){
+					if($least_dist > ($nearest_entity->size->getWidth() + 6.25)){
 						$x = ($nearest_player_pos->x - $pos->x) + (lcg_value() * 2 - 1);
 						$z = ($nearest_player_pos->z - $pos->z) + (lcg_value() * 2 - 1);
 						$xz_modulus = sqrt($x * $x + $z * $z);

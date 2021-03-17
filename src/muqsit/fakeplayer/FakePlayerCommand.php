@@ -8,6 +8,7 @@ use muqsit\fakeplayer\network\FakePlayerNetworkSession;
 use muqsit\fakeplayer\network\listener\ClosureFakePlayerPacketListener;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
+use pocketmine\math\Vector3;
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\ClientboundPacket;
 use pocketmine\network\mcpe\protocol\TextPacket;
@@ -65,6 +66,17 @@ final class FakePlayerCommand extends Command implements PluginOwned{
 											$session->unregisterSpecificPacketListener(TextPacket::class, $listener);
 										}else{
 											$sender->sendMessage(TextFormat::RED . "Usage: /" . $commandLabel . " " . $player->getName() . " " . $args[1] . " <...chat>");
+										}
+										return;
+									case "interact":
+										$target_block = $player->getTargetBlock(5);
+										$item_in_hand = $player->getInventory()->getItemInHand();
+										if($target_block !== null){
+											$player->interactBlock($target_block->getPos(), $player->getHorizontalFacing(), new Vector3(0, 0, 0));
+											$sender->sendMessage(TextFormat::GRAY . "{$player->getName()} is interacting with {$target_block->getName()} at {$target_block->getPos()->asVector3()} using {$item_in_hand}" . TextFormat::RESET . TextFormat::GRAY . ".");
+										}else{
+											$player->useHeldItem();
+											$sender->sendMessage(TextFormat::GRAY . "{$player->getName()} is interacting using {$item_in_hand}" . TextFormat::RESET . TextFormat::GRAY . ".");
 										}
 										return;
 								}
