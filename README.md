@@ -115,4 +115,4 @@ To add a behaviour to a player, pass it during `Loader::addPlayer()` OR specify 
 
 ### Frequently Asked Questions
 Q. Does this work with encryption enabled?<br>
-A. ye
+A. Yes
