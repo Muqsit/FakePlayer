@@ -11,6 +11,7 @@ use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\ClientboundPacket;
 use pocketmine\network\mcpe\protocol\PlayStatusPacket;
 use pocketmine\network\mcpe\protocol\RespawnPacket;
+use pocketmine\network\mcpe\protocol\serializer\PacketSerializer;
 use pocketmine\network\mcpe\protocol\SetLocalPlayerAsInitializedPacket;
 use pocketmine\player\Player;
 use pocketmine\scheduler\ClosureTask;
@@ -36,8 +37,10 @@ final class DefaultFakePlayerListener implements FakePlayerListener{
 					if($session->isConnected()){
 						$packet = new SetLocalPlayerAsInitializedPacket();
 						$packet->entityRuntimeId = $entity_runtime_id;
-						$packet->encode();
-						$session->handleDataPacket($packet);
+
+						$serializer = new PacketSerializer();
+						$packet->encode($serializer);
+						$session->handleDataPacket($packet, $serializer->getBuffer());
 					}
 				}), 40);
 			}

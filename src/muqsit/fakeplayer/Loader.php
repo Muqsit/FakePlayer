@@ -14,6 +14,8 @@ use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\network\mcpe\compression\ZlibCompressor;
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\PacketPool;
+use pocketmine\network\mcpe\protocol\ResourcePackClientResponsePacket;
+use pocketmine\network\mcpe\protocol\serializer\PacketSerializer;
 use pocketmine\network\mcpe\StandardPacketBroadcaster;
 use pocketmine\player\Player;
 use pocketmine\player\XboxLivePlayerInfo;
@@ -110,6 +112,12 @@ final class Loader extends PluginBase implements Listener{
 		$rp = new ReflectionMethod(NetworkSession::class, "onServerLoginSuccess");
 		$rp->setAccessible(true);
 		$rp->invoke($session);
+
+		$packet = new ResourcePackClientResponsePacket();
+		$packet->status = ResourcePackClientResponsePacket::STATUS_COMPLETED;
+		$serializer = new PacketSerializer();
+		$packet->encode($serializer);
+		$session->handleDataPacket($packet, $serializer->getBuffer());
 
 		$rp = new ReflectionMethod(NetworkSession::class, "beginSpawnSequence");
 		$rp->setAccessible(true);
