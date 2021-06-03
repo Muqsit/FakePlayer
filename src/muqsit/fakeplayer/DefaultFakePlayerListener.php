@@ -59,11 +59,6 @@ final class DefaultFakePlayerListener implements FakePlayerListener{
 				}
 			}), 40);
 		}));
-
-		$session->registerSpecificPacketListener(TextPacket::class, new ClosureFakePlayerPacketListener(function(ClientboundPacket $packet, NetworkSession $session) : void{
-			assert($packet instanceof TextPacket);
-			$this->plugin->getLogger()->info("{$session->getDisplayName()} (received message type: {$packet->type}): {$packet->message}");
-		}));
 	}
 
 	public function onPlayerRemove(Player $player) : void{
