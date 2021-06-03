@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace muqsit\fakeplayer;
 
 use InvalidArgumentException;
-use muqsit\fakeplayer\behaviour\FakePlayerBehaviourManager;
+use muqsit\fakeplayer\behaviour\FakePlayerBehaviourFactory;
 use muqsit\fakeplayer\listener\FakePlayerListener;
 use muqsit\fakeplayer\network\FakePlayerNetworkSession;
 use pocketmine\entity\Skin;
@@ -29,10 +29,10 @@ use ReflectionProperty;
 final class Loader extends PluginBase implements Listener{
 
 	/** @var FakePlayerListener[] */
-	private $listeners = [];
+	private array $listeners = [];
 
 	/** @var FakePlayer[] */
-	private $fake_players = [];
+	private array $fake_players = [];
 
 	protected function onEnable() : void{
 		$cmd = new FakePlayerCommand("fakeplayer", "Control fake player", null, ["fp"]);
@@ -40,7 +40,7 @@ final class Loader extends PluginBase implements Listener{
 		$this->getServer()->getCommandMap()->register($this->getName(), $cmd);
 
 		$this->registerListener(new DefaultFakePlayerListener($this));
-		FakePlayerBehaviourManager::registerDefaults($this);
+		FakePlayerBehaviourFactory::registerDefaults();
 
 		$this->getScheduler()->scheduleRepeatingTask(new ClosureTask(function() : void{
 			foreach($this->fake_players as $player){
@@ -91,8 +91,10 @@ final class Loader extends PluginBase implements Listener{
 	 * @param string $username
 	 * @param Skin $skin
 	 * @param array<string, mixed> $extra_data
-	 * @param string[] $behaviours
+	 * @param mixed[] $behaviours
 	 * @return Player
+	 *
+	 * @phpstan-param array<string, array<string, mixed>> $behaviours
 	 */
 	public function addPlayer(UuidInterface $uuid, string $xuid, string $username, Skin $skin, array $extra_data, array $behaviours = []) : Player{
 		$_skin_data = $this->getResource("skin.rgba");
@@ -128,8 +130,8 @@ final class Loader extends PluginBase implements Listener{
 		$player = $session->getPlayer();
 		assert($player !== null);
 		$this->fake_players[$player->getUniqueId()->getBytes()] = $fake_player = new FakePlayer($session);
-		foreach($behaviours as $behaviour){
-			$fake_player->addBehaviour(FakePlayerBehaviourManager::get($this, $behaviour));
+		foreach($behaviours as $behaviour_identifier => $behaviour_data){
+			$fake_player->addBehaviour(FakePlayerBehaviourFactory::get($this, $behaviour_identifier, $behaviour_data));
 		}
 
 		foreach($this->listeners as $listener){

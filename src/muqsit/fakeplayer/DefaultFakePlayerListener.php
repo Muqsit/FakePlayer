@@ -13,13 +13,14 @@ use pocketmine\network\mcpe\protocol\PlayStatusPacket;
 use pocketmine\network\mcpe\protocol\RespawnPacket;
 use pocketmine\network\mcpe\protocol\serializer\PacketSerializer;
 use pocketmine\network\mcpe\protocol\SetLocalPlayerAsInitializedPacket;
+use pocketmine\network\mcpe\protocol\TextPacket;
 use pocketmine\player\Player;
 use pocketmine\scheduler\ClosureTask;
+use pocketmine\Server;
 
 final class DefaultFakePlayerListener implements FakePlayerListener{
 
-	/** @var Loader */
-	private $plugin;
+	private Loader $plugin;
 
 	public function __construct(Loader $plugin){
 		$this->plugin = $plugin;
@@ -57,6 +58,11 @@ final class DefaultFakePlayerListener implements FakePlayerListener{
 					}
 				}
 			}), 40);
+		}));
+
+		$session->registerSpecificPacketListener(TextPacket::class, new ClosureFakePlayerPacketListener(function(ClientboundPacket $packet, NetworkSession $session) : void{
+			assert($packet instanceof TextPacket);
+			$this->plugin->getLogger()->info("{$session->getDisplayName()} (received message type: {$packet->type}): {$packet->message}");
 		}));
 	}
 

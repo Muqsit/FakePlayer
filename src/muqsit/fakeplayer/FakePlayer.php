@@ -20,17 +20,12 @@ use ReflectionProperty;
 
 final class FakePlayer{
 
-	/** @var FakePlayerNetworkSession */
-	private $session;
-
-	/** @var Player */
-	private $player;
-
-	/** @var Vector3 */
-	private $motion;
+	private FakePlayerNetworkSession $session;
+	private Player $player;
+	private Vector3 $motion;
 
 	/** @var FakePlayerBehaviour[] */
-	private $behaviours = [];
+	private array $behaviours = [];
 
 	public function __construct(FakePlayerNetworkSession $session){
 		$this->session = $session;

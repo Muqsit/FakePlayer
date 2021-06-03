@@ -16,8 +16,10 @@
             "DeviceModel": "PocketMine-MP",
             "DeviceOS": 7
         },
-        "behaviours": [
-            "fakeplayer:pvp"
-        ]
+        "behaviours": {
+            "fakeplayer:pvp": {
+                "reach_distance": 4.0
+            }
+        }
     }
 }

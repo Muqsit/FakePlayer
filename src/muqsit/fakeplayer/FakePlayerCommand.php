@@ -20,8 +20,7 @@ use pocketmine\utils\TextFormat;
 
 final class FakePlayerCommand extends Command implements PluginOwned{
 
-	/** @var Loader */
-	private $plugin;
+	private Loader $plugin;
 
 	public function init(Loader $plugin) : void{
 		$this->plugin = $plugin;

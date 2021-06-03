@@ -10,11 +10,8 @@ use pocketmine\utils\Utils;
 
 final class ClosureFakePlayerListener implements FakePlayerListener{
 
-	/** @var Closure */
-	private $on_player_add;
-
-	/** @var Closure */
-	private $on_player_remove;
+	private Closure $on_player_add;
+	private Closure $on_player_remove;
 
 	public function __construct(Closure $on_player_add, Closure $on_player_remove){
 		Utils::validateCallableSignature(static function(Player $player) : void{}, $on_player_add);

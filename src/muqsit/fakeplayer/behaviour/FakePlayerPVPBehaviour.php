@@ -14,17 +14,20 @@ use pocketmine\player\Player;
 
 class FakePlayerPVPBehaviour implements FakePlayerBehaviour{
 
-	/** @var Loader */
-	protected $plugin;
+	public static function create(array $data) : self{
+		return new self($data["reach_distance"]);
+	}
 
-	/** @var int */
-	protected $last_check = 0;
+	protected float $reach_distance_sq;
 
-	/** @var int|null */
-	protected $target_entity_id;
+	protected Loader $plugin;
+	protected int $last_check = 0;
+	protected ?int $target_entity_id = null;
+	protected int $last_movement = 0;
 
-	/** @var int */
-	protected $last_movement = 0;
+	public function __construct(float $reach_distance){
+		$this->reach_distance_sq = $reach_distance * $reach_distance;
+	}
 
 	public function init(Loader $plugin) : void{
 		$this->plugin = $plugin;
@@ -102,7 +105,7 @@ class FakePlayerPVPBehaviour implements FakePlayerBehaviour{
 						}
 					}
 					$player->lookAt($nearest_player_pos);
-					if($least_dist <= (mt_rand(1200, 1600) * 0.01)){
+					if($least_dist <= $this->reach_distance_sq){
 						$player->attackEntity($nearest_entity);
 					}
 				}
