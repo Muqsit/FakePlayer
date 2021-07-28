@@ -7,11 +7,13 @@ namespace muqsit\fakeplayer;
 use muqsit\fakeplayer\listener\FakePlayerListener;
 use muqsit\fakeplayer\network\FakePlayerNetworkSession;
 use muqsit\fakeplayer\network\listener\ClosureFakePlayerPacketListener;
+use pocketmine\network\mcpe\convert\GlobalItemTypeDictionary;
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\ClientboundPacket;
 use pocketmine\network\mcpe\protocol\PlayStatusPacket;
 use pocketmine\network\mcpe\protocol\RespawnPacket;
 use pocketmine\network\mcpe\protocol\serializer\PacketSerializer;
+use pocketmine\network\mcpe\protocol\serializer\PacketSerializerContext;
 use pocketmine\network\mcpe\protocol\SetLocalPlayerAsInitializedPacket;
 use pocketmine\network\mcpe\protocol\TextPacket;
 use pocketmine\player\Player;
@@ -39,7 +41,7 @@ final class DefaultFakePlayerListener implements FakePlayerListener{
 						$packet = new SetLocalPlayerAsInitializedPacket();
 						$packet->entityRuntimeId = $entity_runtime_id;
 
-						$serializer = new PacketSerializer();
+						$serializer = PacketSerializer::encoder(new PacketSerializerContext(GlobalItemTypeDictionary::getInstance()->getDictionary()));
 						$packet->encode($serializer);
 						$session->handleDataPacket($packet, $serializer->getBuffer());
 					}

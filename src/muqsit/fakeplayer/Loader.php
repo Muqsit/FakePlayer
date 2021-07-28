@@ -12,10 +12,12 @@ use pocketmine\entity\Skin;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\network\mcpe\compression\ZlibCompressor;
+use pocketmine\network\mcpe\convert\GlobalItemTypeDictionary;
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\PacketPool;
 use pocketmine\network\mcpe\protocol\ResourcePackClientResponsePacket;
 use pocketmine\network\mcpe\protocol\serializer\PacketSerializer;
+use pocketmine\network\mcpe\protocol\serializer\PacketSerializerContext;
 use pocketmine\network\mcpe\StandardPacketBroadcaster;
 use pocketmine\player\Player;
 use pocketmine\player\XboxLivePlayerInfo;
@@ -117,7 +119,7 @@ final class Loader extends PluginBase implements Listener{
 
 		$packet = new ResourcePackClientResponsePacket();
 		$packet->status = ResourcePackClientResponsePacket::STATUS_COMPLETED;
-		$serializer = new PacketSerializer();
+		$serializer = PacketSerializer::encoder(new PacketSerializerContext(GlobalItemTypeDictionary::getInstance()->getDictionary()));
 		$packet->encode($serializer);
 		$session->handleDataPacket($packet, $serializer->getBuffer());
 
