@@ -6,7 +6,6 @@ namespace muqsit\fakeplayer\network\listener;
 
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\ClientboundPacket;
-use pocketmine\utils\Utils;
 
 /**
  * @internal
@@ -16,8 +15,13 @@ final class FakePlayerSpecificPacketListener implements FakePlayerPacketListener
 	/** @var FakePlayerPacketListener[][] */
 	private $listeners = [];
 
+	/**
+	 * @param string $packet
+	 * @param FakePlayerPacketListener $listener
+	 *
+	 * @phpstan-param class-string<ClientboundPacket> $packet
+	 */
 	public function register(string $packet, FakePlayerPacketListener $listener) : void{
-		Utils::testValidInstance($packet, ClientboundPacket::class);
 		$this->listeners[$packet][spl_object_id($listener)] = $listener;
 	}
 

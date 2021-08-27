@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace muqsit\fakeplayer\behaviour;
 
 use muqsit\fakeplayer\Loader;
-use pocketmine\utils\Utils;
 
 final class FakePlayerBehaviourFactory{
 
@@ -26,7 +25,6 @@ final class FakePlayerBehaviourFactory{
 	 * @phpstan-param class-string<FakePlayerBehaviour> $class
 	 */
 	public static function register(string $identifier, string $class) : void{
-		Utils::testValidInstance($class, FakePlayerBehaviour::class);
 		self::$behaviours[$identifier] = $class;
 	}
 
