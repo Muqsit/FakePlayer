@@ -9,7 +9,9 @@ use muqsit\fakeplayer\network\FakePlayerNetworkSession;
 use muqsit\fakeplayer\network\listener\ClosureFakePlayerPacketListener;
 use pocketmine\network\mcpe\convert\GlobalItemTypeDictionary;
 use pocketmine\network\mcpe\NetworkSession;
+use pocketmine\network\mcpe\protocol\ChangeDimensionPacket;
 use pocketmine\network\mcpe\protocol\ClientboundPacket;
+use pocketmine\network\mcpe\protocol\PlayerActionPacket;
 use pocketmine\network\mcpe\protocol\PlayStatusPacket;
 use pocketmine\network\mcpe\protocol\RespawnPacket;
 use pocketmine\network\mcpe\protocol\serializer\PacketSerializer;
@@ -57,6 +59,29 @@ final class DefaultFakePlayerListener implements FakePlayerListener{
 					$player->respawn();
 					foreach($this->plugin->getFakePlayer($player)->getBehaviours() as $behaviour){
 						$behaviour->onRespawn($player);
+					}
+				}
+			}), 40);
+		}));
+
+		$session->registerSpecificPacketListener(ChangeDimensionPacket::class, new ClosureFakePlayerPacketListener(function(ClientboundPacket $packet, NetworkSession $session) : void{
+			$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(function() use($session) : void{
+				if($session->isConnected()){
+					$player = $session->getPlayer();
+					if($player !== null){
+						$position = $player->getPosition()->floor();
+
+						$packet = new PlayerActionPacket();
+						$packet->action = PlayerActionPacket::ACTION_DIMENSION_CHANGE_ACK;
+						$packet->entityRuntimeId = $player->getId();
+						$packet->face = 0;
+						$packet->x = $position->x;
+						$packet->y = $position->y;
+						$packet->z = $position->z;
+
+						$serializer = PacketSerializer::encoder(new PacketSerializerContext(GlobalItemTypeDictionary::getInstance()->getDictionary()));
+						$packet->encode($serializer);
+						$session->handleDataPacket($packet, $serializer->getBuffer());
 					}
 				}
 			}), 40);
