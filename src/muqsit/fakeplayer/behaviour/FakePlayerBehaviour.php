@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace muqsit\fakeplayer\behaviour;
 
+use muqsit\fakeplayer\FakePlayer;
 use muqsit\fakeplayer\Loader;
-use pocketmine\player\Player;
 
 interface FakePlayerBehaviour{
 
@@ -19,11 +19,11 @@ interface FakePlayerBehaviour{
 	 */
 	public static function create(array $data) : self;
 
-	public function onAddToPlayer(Player $player) : void;
+	public function onAddToPlayer(FakePlayer $player) : void;
 
-	public function onRemoveFromPlayer(Player $player) : void;
+	public function onRemoveFromPlayer(FakePlayer $player) : void;
 
-	public function tick(Player $player) : void;
+	public function tick(FakePlayer $player) : void;
 
-	public function onRespawn(Player $player) : void;
+	public function onRespawn(FakePlayer $player) : void;
 }

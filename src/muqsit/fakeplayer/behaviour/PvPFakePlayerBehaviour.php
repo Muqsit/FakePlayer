@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace muqsit\fakeplayer\behaviour;
 
+use muqsit\fakeplayer\FakePlayer;
 use muqsit\fakeplayer\Loader;
 use pocketmine\entity\Entity;
 use pocketmine\entity\Living;
@@ -43,16 +44,17 @@ class PvPFakePlayerBehaviour implements FakePlayerBehaviour{
 		$this->target_entity_id = $target !== null ? $target->getId() : null;
 	}
 
-	public function onAddToPlayer(Player $player) : void{
+	public function onAddToPlayer(FakePlayer $player) : void{
 	}
 
-	public function onRemoveFromPlayer(Player $player) : void{
+	public function onRemoveFromPlayer(FakePlayer $player) : void{
 	}
 
-	public function onRespawn(Player $player) : void{
+	public function onRespawn(FakePlayer $player) : void{
 	}
 
-	public function tick(Player $player) : void{
+	public function tick(FakePlayer $fake_player) : void{
+		$player = $fake_player->getPlayer();
 		if($player->onGround && $player->isAlive()){
 			$motion = $player->getMotion();
 			if($motion->y === -0.0672){

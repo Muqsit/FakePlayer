@@ -36,6 +36,14 @@ final class FakePlayer{
 		$this->init();
 	}
 
+	public function getPlayer() : Player{
+		return $this->player;
+	}
+
+	public function getPlayerNullable() : ?Player{
+		return $this->player;
+	}
+
 	private function init() : void{
 		/** @noinspection PhpUnhandledExceptionInspection */
 		$rp = new ReflectionProperty($this->player, "drag");
@@ -67,7 +75,7 @@ final class FakePlayer{
 	public function addBehaviour(FakePlayerBehaviour $behaviour) : void{
 		if(!isset($this->behaviours[$id = spl_object_id($behaviour)])){
 			$this->behaviours[$id] = $behaviour;
-			$behaviour->onAddToPlayer($this->player);
+			$behaviour->onAddToPlayer($this);
 		}
 	}
 
@@ -82,7 +90,7 @@ final class FakePlayer{
 		if(isset($this->behaviours[$id = spl_object_id($behaviour)])){
 			$behaviour = $this->behaviours[$id];
 			unset($this->behaviours[$id]);
-			$behaviour->onRemoveFromPlayer($this->player);
+			$behaviour->onRemoveFromPlayer($this);
 		}
 	}
 
@@ -94,7 +102,7 @@ final class FakePlayer{
 		$this->setPlayerMotion();
 		$this->tryChangeMovement();
 		foreach($this->behaviours as $behaviour){
-			$behaviour->tick($this->player);
+			$behaviour->tick($this);
 		}
 		$this->syncPlayerMotion();
 
@@ -167,7 +175,7 @@ final class FakePlayer{
 		$reflection_method->getClosure($this->player)($dx, $dy, $dz);
 	}
 
-	public function getMetadata(string $key, mixed $default = null){
+	public function getMetadata(string $key, mixed $default = null) : mixed{
 		return $this->metadata[$key] ?? $default;
 	}
 
