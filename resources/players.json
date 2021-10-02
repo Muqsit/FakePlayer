@@ -8,9 +8,7 @@
             "DeviceOS": 7
         },
         "behaviours": {
-            "fakeplayer:pvp": {
-                "fakeplayer:auto_equip_armor": {}
-            }
+            "fakeplayer:auto_equip_armor": {}
         }
     },
     "815e76d4-6248-3c27-9dc5-e49230a5dec4": {
@@ -22,8 +20,8 @@
             "DeviceOS": 7
         },
         "behaviours": {
+            "fakeplayer:auto_equip_armor": {},
             "fakeplayer:pvp": {
-                "fakeplayer:auto_equip_armor": {},
                 "reach_distance": 4.0
             }
         }
