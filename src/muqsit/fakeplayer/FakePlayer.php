@@ -27,6 +27,9 @@ final class FakePlayer{
 	/** @var FakePlayerBehaviour[] */
 	private array $behaviours = [];
 
+	/** @var array<string, mixed> */
+	private array $metadata = [];
+
 	public function __construct(FakePlayerNetworkSession $session){
 		$this->session = $session;
 		$this->player = $session->getPlayer();
@@ -53,6 +56,8 @@ final class FakePlayer{
 		foreach($this->behaviours as $behaviour){
 			$this->removeBehaviour($behaviour);
 		}
+
+		$this->metadata = [];
 	}
 
 	public function getNetworkSession() : FakePlayerNetworkSession{
@@ -160,5 +165,13 @@ final class FakePlayer{
 			$reflection_method->setAccessible(true);
 		}
 		$reflection_method->getClosure($this->player)($dx, $dy, $dz);
+	}
+
+	public function getMetadata(string $key, mixed $default = null){
+		return $this->metadata[$key] ?? $default;
+	}
+
+	public function setMetadata(string $key, mixed $value) : void{
+		$this->metadata[$key] = $value;
 	}
 }
