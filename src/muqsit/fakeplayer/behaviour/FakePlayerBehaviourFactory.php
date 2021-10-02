@@ -15,7 +15,7 @@ final class FakePlayerBehaviourFactory{
 	private static array $behaviours = [];
 
 	public static function registerDefaults() : void{
-		self::register("fakeplayer:pvp", FakePlayerPVPBehaviour::class);
+		self::register("fakeplayer:pvp", PvPFakePlayerBehaviour::class);
 	}
 
 	/**

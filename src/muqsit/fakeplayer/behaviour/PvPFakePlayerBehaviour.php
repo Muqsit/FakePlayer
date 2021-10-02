@@ -12,7 +12,7 @@ use pocketmine\math\Vector3;
 use pocketmine\player\GameMode;
 use pocketmine\player\Player;
 
-class FakePlayerPVPBehaviour implements FakePlayerBehaviour{
+class PvPFakePlayerBehaviour implements FakePlayerBehaviour{
 
 	public static function create(array $data) : self{
 		return new self($data["reach_distance"]);
