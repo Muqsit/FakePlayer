@@ -42,7 +42,7 @@ final class Loader extends PluginBase implements Listener{
 		$this->getServer()->getCommandMap()->register($this->getName(), $cmd);
 
 		$this->registerListener(new DefaultFakePlayerListener($this));
-		FakePlayerBehaviourFactory::registerDefaults();
+		FakePlayerBehaviourFactory::registerDefaults($this);
 
 		$this->getScheduler()->scheduleRepeatingTask(new ClosureTask(function() : void{
 			foreach($this->fake_players as $player){
@@ -133,7 +133,7 @@ final class Loader extends PluginBase implements Listener{
 		assert($player !== null);
 		$this->fake_players[$player->getUniqueId()->getBytes()] = $fake_player = new FakePlayer($session);
 		foreach($behaviours as $behaviour_identifier => $behaviour_data){
-			$fake_player->addBehaviour(FakePlayerBehaviourFactory::get($this, $behaviour_identifier, $behaviour_data));
+			$fake_player->addBehaviour(FakePlayerBehaviourFactory::create($behaviour_identifier, $behaviour_data));
 		}
 
 		foreach($this->listeners as $listener){

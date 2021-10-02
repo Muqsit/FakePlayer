@@ -18,19 +18,17 @@ class PvPFakePlayerBehaviour implements FakePlayerBehaviour{
 		return new self($data["reach_distance"]);
 	}
 
+	public static function init(Loader $plugin) : void{
+	}
+
 	protected float $reach_distance_sq;
 
-	protected Loader $plugin;
 	protected int $last_check = 0;
 	protected ?int $target_entity_id = null;
 	protected int $last_movement = 0;
 
 	public function __construct(float $reach_distance){
 		$this->reach_distance_sq = $reach_distance * $reach_distance;
-	}
-
-	public function init(Loader $plugin) : void{
-		$this->plugin = $plugin;
 	}
 
 	protected function isValidTarget(Player $player, Entity $entity) : bool{
