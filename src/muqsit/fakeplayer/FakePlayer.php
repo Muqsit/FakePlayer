@@ -182,4 +182,8 @@ final class FakePlayer{
 	public function setMetadata(string $key, mixed $value) : void{
 		$this->metadata[$key] = $value;
 	}
+
+	public function deleteMetadata(string $key) : void{
+		unset($this->metadata[$key]);
+	}
 }
