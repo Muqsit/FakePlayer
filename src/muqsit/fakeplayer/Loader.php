@@ -152,7 +152,13 @@ final class Loader extends PluginBase implements Listener{
 			throw new InvalidArgumentException("Invalid Player supplied, expected a fake player, got " . $player->getName());
 		}
 
-		unset($this->fake_players[$player->getUniqueId()->getBytes()]);
+		if(!isset($this->fake_players[$id = $player->getUniqueId()->getBytes()])){
+			return;
+		}
+
+		$this->fake_players[$id]->destroy();
+		unset($this->fake_players[$id]);
+
 		if($disconnect){
 			$player->disconnect("Removed");
 		}

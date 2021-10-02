@@ -45,6 +45,12 @@ class FakePlayerPVPBehaviour implements FakePlayerBehaviour{
 		$this->target_entity_id = $target !== null ? $target->getId() : null;
 	}
 
+	public function onAddToPlayer(Player $player) : void{
+	}
+
+	public function onRemoveFromPlayer(Player $player) : void{
+	}
+
 	public function onRespawn(Player $player) : void{
 	}
 

@@ -19,6 +19,10 @@ interface FakePlayerBehaviour{
 
 	public function init(Loader $plugin) : void;
 
+	public function onAddToPlayer(Player $player) : void;
+
+	public function onRemoveFromPlayer(Player $player) : void;
+
 	public function tick(Player $player) : void;
 
 	public function onRespawn(Player $player) : void;

@@ -49,12 +49,21 @@ final class FakePlayer{
 		}));
 	}
 
+	public function destroy() : void{
+		foreach($this->behaviours as $behaviour){
+			$this->removeBehaviour($behaviour);
+		}
+	}
+
 	public function getNetworkSession() : FakePlayerNetworkSession{
 		return $this->session;
 	}
 
 	public function addBehaviour(FakePlayerBehaviour $behaviour) : void{
-		$this->behaviours[spl_object_id($behaviour)] = $behaviour;
+		if(!isset($this->behaviours[$id = spl_object_id($behaviour)])){
+			$this->behaviours[$id] = $behaviour;
+			$behaviour->onAddToPlayer($this->player);
+		}
 	}
 
 	/**
@@ -65,7 +74,11 @@ final class FakePlayer{
 	}
 
 	public function removeBehaviour(FakePlayerBehaviour $behaviour) : void{
-		unset($this->behaviours[spl_object_id($behaviour)]);
+		if(isset($this->behaviours[$id = spl_object_id($behaviour)])){
+			$behaviour = $this->behaviours[$id];
+			unset($this->behaviours[$id]);
+			$behaviour->onRemoveFromPlayer($this->player);
+		}
 	}
 
 	public function tick() : void{
