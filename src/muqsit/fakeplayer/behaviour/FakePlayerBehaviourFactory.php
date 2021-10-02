@@ -15,6 +15,7 @@ final class FakePlayerBehaviourFactory{
 	private static array $behaviours = [];
 
 	public static function registerDefaults(Loader $plugin) : void{
+		self::register($plugin, "fakeplayer:auto_equip_armor", AutoEquipArmorFakePlayerBehaviour::class);
 		self::register($plugin, "fakeplayer:pvp", PvPFakePlayerBehaviour::class);
 	}
 

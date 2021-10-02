@@ -6,6 +6,11 @@
             "DeviceId": "ea78448a-6b33-3bbd-0e04-22dc3fb9f250",
             "DeviceModel": "PocketMine-MP",
             "DeviceOS": 7
+        },
+        "behaviours": {
+            "fakeplayer:pvp": {
+                "fakeplayer:auto_equip_armor": {}
+            }
         }
     },
     "815e76d4-6248-3c27-9dc5-e49230a5dec4": {
@@ -18,6 +23,7 @@
         },
         "behaviours": {
             "fakeplayer:pvp": {
+                "fakeplayer:auto_equip_armor": {},
                 "reach_distance": 4.0
             }
         }
