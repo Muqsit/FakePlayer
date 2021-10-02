@@ -31,7 +31,8 @@ final class AutoEquipArmorFakePlayerBehaviour implements FakePlayerBehaviour{
 				return;
 			}
 
-			if($plugin->getFakePlayer($entity)?->getMetadata(self::METADATA_KEY) === null){
+			$fake_player = $plugin->getFakePlayer($entity);
+			if($fake_player === null || $fake_player->getMetadata(self::METADATA_KEY) === null){
 				return;
 			}
 
