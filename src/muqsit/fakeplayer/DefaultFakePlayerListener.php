@@ -18,6 +18,8 @@ use pocketmine\network\mcpe\protocol\serializer\PacketSerializer;
 use pocketmine\network\mcpe\protocol\serializer\PacketSerializerContext;
 use pocketmine\network\mcpe\protocol\SetLocalPlayerAsInitializedPacket;
 use pocketmine\network\mcpe\protocol\TextPacket;
+use pocketmine\network\mcpe\protocol\types\BlockPosition;
+use pocketmine\network\mcpe\protocol\types\PlayerAction;
 use pocketmine\player\Player;
 use pocketmine\scheduler\ClosureTask;
 use pocketmine\Server;
@@ -41,7 +43,7 @@ final class DefaultFakePlayerListener implements FakePlayerListener{
 				$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(static function() use($session, $entity_runtime_id) : void{
 					if($session->isConnected()){
 						$packet = new SetLocalPlayerAsInitializedPacket();
-						$packet->entityRuntimeId = $entity_runtime_id;
+						$packet->actorRuntimeId = $entity_runtime_id;
 
 						$serializer = PacketSerializer::encoder(new PacketSerializerContext(GlobalItemTypeDictionary::getInstance()->getDictionary()));
 						$packet->encode($serializer);
@@ -70,15 +72,12 @@ final class DefaultFakePlayerListener implements FakePlayerListener{
 				if($session->isConnected()){
 					$player = $session->getPlayer();
 					if($player !== null){
-						$position = $player->getPosition()->floor();
-
-						$packet = new PlayerActionPacket();
-						$packet->action = PlayerActionPacket::ACTION_DIMENSION_CHANGE_ACK;
-						$packet->entityRuntimeId = $player->getId();
-						$packet->face = 0;
-						$packet->x = $position->x;
-						$packet->y = $position->y;
-						$packet->z = $position->z;
+						$packet = PlayerActionPacket::create(
+							$player->getId(),
+							PlayerAction::DIMENSION_CHANGE_ACK,
+							BlockPosition::fromVector3($player->getPosition()->floor()),
+							0
+						);
 
 						$serializer = PacketSerializer::encoder(new PacketSerializerContext(GlobalItemTypeDictionary::getInstance()->getDictionary()));
 						$packet->encode($serializer);
