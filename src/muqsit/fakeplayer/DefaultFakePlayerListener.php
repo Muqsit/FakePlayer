@@ -72,12 +72,10 @@ final class DefaultFakePlayerListener implements FakePlayerListener{
 				if($session->isConnected()){
 					$player = $session->getPlayer();
 					if($player !== null){
-						$vector3 = $player->getPosition()->floor();
-
 						$packet = PlayerActionPacket::create(
 							$player->getId(),
 							PlayerAction::DIMENSION_CHANGE_ACK,
-							BlockPosition::fromVector3($vector3),
+							BlockPosition::fromVector3($player->getPosition()->floor()),
 							0
 						);
 
