@@ -54,7 +54,7 @@ final class FakePlayer{
 		$this->motion = new Vector3(0.0, 0.0, 0.0);
 		$this->session->registerSpecificPacketListener(SetActorMotionPacket::class, new ClosureFakePlayerPacketListener(function(ClientboundPacket $packet, NetworkSession $session) : void{
 			/** @var SetActorMotionPacket $packet */
-			if($packet->entityRuntimeId === $this->player->getId()){
+			if($packet->actorRuntimeId === $this->player->getId()){
 				$this->motion = $packet->motion->asVector3();
 			}
 		}));
