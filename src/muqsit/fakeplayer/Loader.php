@@ -6,6 +6,7 @@ namespace muqsit\fakeplayer;
 
 use InvalidArgumentException;
 use muqsit\fakeplayer\behaviour\FakePlayerBehaviourFactory;
+use muqsit\fakeplayer\info\FakePlayerInfo;
 use muqsit\fakeplayer\listener\FakePlayerListener;
 use muqsit\fakeplayer\network\FakePlayerNetworkSession;
 use pocketmine\entity\Skin;
@@ -61,7 +62,7 @@ final class Loader extends PluginBase implements Listener{
 
 			foreach($players as $uuid => $data){
 				["xuid" => $xuid, "gamertag" => $gamertag] = $data;
-				$this->addPlayer(Uuid::fromString($uuid), $xuid, $gamertag, $skin, $data["extra_data"] ?? [], $data["behaviours"] ?? []);
+				$this->addPlayer(new FakePlayerInfo(Uuid::fromString($uuid), $xuid, $gamertag, $skin, $data["extra_data"] ?? [], $data["behaviours"] ?? []));
 			}
 		}), 20);
 		$this->getServer()->getPluginManager()->registerEvents($this, $this);
@@ -87,22 +88,7 @@ final class Loader extends PluginBase implements Listener{
 		return $this->fake_players[$player->getUniqueId()->getBytes()] ?? null;
 	}
 
-	/**
-	 * @param UuidInterface $uuid
-	 * @param string $xuid
-	 * @param string $username
-	 * @param Skin $skin
-	 * @param array<string, mixed> $extra_data
-	 * @param mixed[] $behaviours
-	 * @return Player
-	 *
-	 * @phpstan-param array<string, array<string, mixed>> $behaviours
-	 */
-	public function addPlayer(UuidInterface $uuid, string $xuid, string $username, Skin $skin, array $extra_data, array $behaviours = []) : Player{
-		$_skin_data = $this->getResource("skin.rgba");
-		$skin_data = stream_get_contents($_skin_data);
-		fclose($_skin_data);
-
+	public function addPlayer(FakePlayerInfo $info) : Player{
 		$server = $this->getServer();
 		$network = $server->getNetwork();
 
@@ -111,7 +97,7 @@ final class Loader extends PluginBase implements Listener{
 
 		$rp = new ReflectionProperty(NetworkSession::class, "info");
 		$rp->setAccessible(true);
-		$rp->setValue($session, new XboxLivePlayerInfo($xuid, $username, $uuid, $skin, "en_US", $extra_data));
+		$rp->setValue($session, new XboxLivePlayerInfo($info->xuid, $info->username, $info->uuid, $info->skin, "en_US" /* TODO: Make locale configurable? */, $info->extra_data));
 
 		$rp = new ReflectionMethod(NetworkSession::class, "onServerLoginSuccess");
 		$rp->setAccessible(true);
@@ -132,7 +118,7 @@ final class Loader extends PluginBase implements Listener{
 		$player = $session->getPlayer();
 		assert($player !== null);
 		$this->fake_players[$player->getUniqueId()->getBytes()] = $fake_player = new FakePlayer($session);
-		foreach($behaviours as $behaviour_identifier => $behaviour_data){
+		foreach($info->behaviours as $behaviour_identifier => $behaviour_data){
 			$fake_player->addBehaviour(FakePlayerBehaviourFactory::create($behaviour_identifier, $behaviour_data));
 		}
 
