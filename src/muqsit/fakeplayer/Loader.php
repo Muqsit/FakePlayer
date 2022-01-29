@@ -52,19 +52,15 @@ final class Loader extends PluginBase implements Listener{
 		}), 1);
 
 		$this->saveResource("players.json");
-		$this->getScheduler()->scheduleDelayedTask(new ClosureTask(function() : void{
-			$players = json_decode(file_get_contents($this->getDataFolder() . "players.json"), true, 512, JSON_THROW_ON_ERROR);
 
-			$_skin_data = $this->getResource("skin.rgba");
-			$skin_data = stream_get_contents($_skin_data);
-			fclose($_skin_data);
-			$skin = new Skin("Standard_Custom", $skin_data);
-
-			foreach($players as $uuid => $data){
-				["xuid" => $xuid, "gamertag" => $gamertag] = $data;
-				$this->addPlayer(new FakePlayerInfo(Uuid::fromString($uuid), $xuid, $gamertag, $skin, $data["extra_data"] ?? [], $data["behaviours"] ?? []));
-			}
-		}), 20);
+		$configured_players_add_delay = (int) $this->getConfig()->get("configured-players-add-delay");
+		if($configured_players_add_delay === -1){
+			$this->addConfiguredPlayers();
+		}else{
+			$this->getScheduler()->scheduleDelayedTask(new ClosureTask(function() : void{
+				$this->addConfiguredPlayers();
+			}), $configured_players_add_delay);
+		}
 		$this->getServer()->getPluginManager()->registerEvents($this, $this);
 	}
 
@@ -151,6 +147,20 @@ final class Loader extends PluginBase implements Listener{
 
 		foreach($this->listeners as $listener){
 			$listener->onPlayerRemove($player);
+		}
+	}
+
+	public function addConfiguredPlayers() : void{
+		$players = json_decode(file_get_contents($this->getDataFolder() . "players.json"), true, 512, JSON_THROW_ON_ERROR);
+
+		$_skin_data = $this->getResource("skin.rgba");
+		$skin_data = stream_get_contents($_skin_data);
+		fclose($_skin_data);
+		$skin = new Skin("Standard_Custom", $skin_data);
+
+		foreach($players as $uuid => $data){
+			["xuid" => $xuid, "gamertag" => $gamertag] = $data;
+			$this->addPlayer(new FakePlayerInfo(Uuid::fromString($uuid), $xuid, $gamertag, $skin, $data["extra_data"] ?? [], $data["behaviours"] ?? []));
 		}
 	}
 
