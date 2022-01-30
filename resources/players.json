@@ -22,7 +22,8 @@
         "behaviours": {
             "fakeplayer:auto_equip_armor": {},
             "fakeplayer:pvp": {
-                "reach_distance": 4.0
+                "reach_distance": 4.0,
+                "pvp_idle_time": 500
             }
         }
     }

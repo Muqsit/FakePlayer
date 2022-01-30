@@ -16,7 +16,7 @@ use pocketmine\player\Player;
 class PvPFakePlayerBehaviour implements FakePlayerBehaviour{
 
 	public static function create(array $data) : self{
-		return new self($data["reach_distance"]);
+		return new self($data["reach_distance"], $data["pvp_idle_time"] ?? 500);
 	}
 
 	public static function init(Loader $plugin) : void{
@@ -27,9 +27,11 @@ class PvPFakePlayerBehaviour implements FakePlayerBehaviour{
 	protected int $last_check = 0;
 	protected ?int $target_entity_id = null;
 	protected int $last_movement = 0;
+	protected int $pvp_idle_time;
 
-	public function __construct(float $reach_distance){
+	public function __construct(float $reach_distance, int $pvp_idle_time){
 		$this->reach_distance_sq = $reach_distance * $reach_distance;
+		$this->pvp_idle_time = $pvp_idle_time;
 	}
 
 	protected function isValidTarget(Player $player, Entity $entity) : bool{
@@ -58,7 +60,7 @@ class PvPFakePlayerBehaviour implements FakePlayerBehaviour{
 		if($player->onGround && $player->isAlive()){
 			$motion = $player->getMotion();
 			if($motion->y === -0.0672){
-				if($player->ticksLived - $this->last_movement > 500){
+				if($this->pvp_idle_time > 0 && $player->ticksLived - $this->last_movement > $this->pvp_idle_time){
 					$pos = $player->getSpawn()->asPosition();
 					$pos->x += 3 * (lcg_value() * 2 - 1);
 					$pos->z += 3 * (lcg_value() * 2 - 1);
