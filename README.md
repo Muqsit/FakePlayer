@@ -27,13 +27,19 @@ Once a fake player joins, you can chat or run commands on their behalf using:<br
 ## API Documentation
 ### Adding a fake player
 ```php
-/**
- * @param UUID $uuid
- * @param string $xuid
- * @param string $username
- * @param mixed[] $extra_data
- */
-Loader::addPlayer(UUID $uuid, string $xuid, string $username, array $extra_data) : Player;
+Loader::addPlayer(FakePlayerInfo $info) : Player;
+```
+Fake players can be spawned in during runtime using `Loader::addPlayer()`. `FakePlayerInfo` consists of player identity and miscellaneous data and can be built easily using `FakePlayerInfoBuilder`.
+```php
+/** @var Loader $plugin */
+$plugin = Server::getInstance()->getPluginManager()->getPlugin("FakePlayer");
+$plugin->addPlayer(FakePlayerInfoBuilder::create()
+	->setUsername("BlahCoast30765")
+	->setXuid("2535431208141398")
+	->setUuid("815e76d4-6248-3c27-9dc5-e49230a5dec4")
+	->setSkin(/* some skin */) // optional ;), defaults to a white skin
+	// ...
+->build());
 ```
 
 ### Test for fake player
