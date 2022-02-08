@@ -4,33 +4,27 @@ declare(strict_types=1);
 
 namespace muqsit\fakeplayer;
 
+use JsonException;
 use muqsit\fakeplayer\network\FakePlayerNetworkSession;
 use muqsit\fakeplayer\network\listener\ClosureFakePlayerPacketListener;
 use pocketmine\command\Command;
+use pocketmine\command\CommandExecutor;
 use pocketmine\command\CommandSender;
 use pocketmine\math\Vector3;
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\ClientboundPacket;
 use pocketmine\network\mcpe\protocol\TextPacket;
 use pocketmine\player\Player;
-use pocketmine\plugin\Plugin;
-use pocketmine\plugin\PluginOwned;
-use pocketmine\Server;
 use pocketmine\utils\TextFormat;
+use ReflectionProperty;
 
-final class FakePlayerCommand extends Command implements PluginOwned{
+final class FakePlayerCommandExecutor implements CommandExecutor{
 
-	private Loader $plugin;
+	public function __construct(
+		private Loader $plugin
+	){}
 
-	public function init(Loader $plugin) : void{
-		$this->plugin = $plugin;
-	}
-
-	public function getOwningPlugin() : Plugin{
-		return $this->plugin;
-	}
-
-	public function execute(CommandSender $sender, string $commandLabel, array $args){
+	public function onCommand(CommandSender $sender, Command $command, string $label, array $args) : bool{
 		if(isset($args[0])){
 			switch($args[0]){
 				case "tpall":
@@ -42,7 +36,7 @@ final class FakePlayerCommand extends Command implements PluginOwned{
 							}
 						}
 					}
-					return;
+					return true;
 				default:
 					if(isset($args[1])){
 						$player = $this->plugin->getServer()->getPlayerByPrefix($args[0]);
@@ -64,9 +58,32 @@ final class FakePlayerCommand extends Command implements PluginOwned{
 											$player->chat($chat);
 											$session->unregisterSpecificPacketListener(TextPacket::class, $listener);
 										}else{
-											$sender->sendMessage(TextFormat::RED . "Usage: /" . $commandLabel . " " . $player->getName() . " " . $args[1] . " <...chat>");
+											$sender->sendMessage(TextFormat::RED . "Usage: /" . $label . " " . $player->getName() . " " . $args[1] . " <...chat>");
 										}
-										return;
+										return true;
+									case "form":
+										if(isset($args[2]) && isset($args[3])){
+											$_formIdCounter = new ReflectionProperty(Player::class, "formIdCounter");
+											$_formIdCounter->setAccessible(true);
+											$form_id = $_formIdCounter->getValue($player) - 1;
+											if($args[2] === "button"){
+												$player->onFormSubmit($form_id, (int) $args[3]);
+												return true;
+											}
+											if($args[2] === "raw"){
+												try{
+													$response = json_decode(implode(" ", array_slice($args, 3)), false, 512, JSON_THROW_ON_ERROR);
+												}catch(JsonException $e){
+													$sender->sendMessage(TextFormat::RED . "Failed to parse JSON: {$e->getMessage()}");
+													return true;
+												}
+												$player->onFormSubmit($form_id, $response);
+												return true;
+											}
+										}
+										$sender->sendMessage(TextFormat::RED . "Usage: /" . $label . " " . $player->getName() . " " . $args[1] . " button <#>");
+										$sender->sendMessage(TextFormat::RED . "Usage: /" . $label . " " . $player->getName() . " " . $args[1] . " raw <responseJson>");
+										return true;
 									case "interact":
 										$target_block = $player->getTargetBlock(5);
 										$item_in_hand = $player->getInventory()->getItemInHand();
@@ -77,15 +94,15 @@ final class FakePlayerCommand extends Command implements PluginOwned{
 											$player->useHeldItem();
 											$sender->sendMessage(TextFormat::GRAY . "{$player->getName()} is interacting using {$item_in_hand}" . TextFormat::RESET . TextFormat::GRAY . ".");
 										}
-										return;
+										return true;
 								}
 							}else{
 								$sender->sendMessage(TextFormat::RED . $player->getName() . " is NOT a fake player!");
-								return;
+								return true;
 							}
 						}else{
 							$sender->sendMessage(TextFormat::RED . $args[0] . " is NOT online!");
-							return;
+							return true;
 						}
 					}
 					break;
@@ -94,8 +111,10 @@ final class FakePlayerCommand extends Command implements PluginOwned{
 
 		$sender->sendMessage(
 			TextFormat::AQUA . TextFormat::BOLD . $this->plugin->getName() . " Commands" . TextFormat::RESET . TextFormat::EOL .
-			TextFormat::AQUA . "/" . $commandLabel . " tpall" . TextFormat::GRAY . " - Teleport all fake players to you" . TextFormat::EOL .
-			TextFormat::AQUA . "/" . $commandLabel . " <player> chat <...chat>" . TextFormat::GRAY . " - Chat on behalf of a fake player"
+			TextFormat::AQUA . "/" . $label . " tpall" . TextFormat::GRAY . " - Teleport all fake players to you" . TextFormat::EOL .
+			TextFormat::AQUA . "/" . $label . " <player> chat <...chat>" . TextFormat::GRAY . " - Chat on behalf of a fake player" . TextFormat::EOL .
+			TextFormat::AQUA . "/" . $label . " <player> form " . TextFormat::GRAY . " - Submit a form on behalf of a fake player"
 		);
+		return true;
 	}
 }

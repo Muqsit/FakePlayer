@@ -9,6 +9,7 @@ use muqsit\fakeplayer\behaviour\FakePlayerBehaviourFactory;
 use muqsit\fakeplayer\info\FakePlayerInfo;
 use muqsit\fakeplayer\listener\FakePlayerListener;
 use muqsit\fakeplayer\network\FakePlayerNetworkSession;
+use pocketmine\command\PluginCommand;
 use pocketmine\entity\Skin;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerQuitEvent;
@@ -25,7 +26,6 @@ use pocketmine\player\XboxLivePlayerInfo;
 use pocketmine\plugin\PluginBase;
 use pocketmine\scheduler\ClosureTask;
 use Ramsey\Uuid\Uuid;
-use Ramsey\Uuid\UuidInterface;
 use ReflectionMethod;
 use ReflectionProperty;
 
@@ -38,9 +38,10 @@ final class Loader extends PluginBase implements Listener{
 	private array $fake_players = [];
 
 	protected function onEnable() : void{
-		$cmd = new FakePlayerCommand("fakeplayer", "Control fake player", null, ["fp"]);
-		$cmd->init($this);
-		$this->getServer()->getCommandMap()->register($this->getName(), $cmd);
+		$command = new PluginCommand("fakeplayer", $this, new FakePlayerCommandExecutor($this));
+		$command->setDescription("Control fake player");
+		$command->setAliases(["fp"]);
+		$this->getServer()->getCommandMap()->register($this->getName(), $command);
 
 		$this->registerListener(new DefaultFakePlayerListener($this));
 		FakePlayerBehaviourFactory::registerDefaults($this);
