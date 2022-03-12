@@ -39,7 +39,7 @@ final class FakePlayerSpecificPacketListener implements FakePlayerPacketListener
 	}
 
 	public function onPacketSend(ClientboundPacket $packet, NetworkSession $session) : void{
-		if(isset($this->listeners[$class = get_class($packet)])){
+		if(isset($this->listeners[$class = $packet::class])){
 			foreach($this->listeners[$class] as $listener){
 				$listener->onPacketSend($packet, $session);
 			}

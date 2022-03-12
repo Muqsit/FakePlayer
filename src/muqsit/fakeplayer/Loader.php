@@ -6,6 +6,9 @@ namespace muqsit\fakeplayer;
 
 use InvalidArgumentException;
 use muqsit\fakeplayer\behaviour\FakePlayerBehaviourFactory;
+use muqsit\fakeplayer\behaviour\internal\FakePlayerMovementData;
+use muqsit\fakeplayer\behaviour\internal\TryChangeMovementInternalFakePlayerBehaviour;
+use muqsit\fakeplayer\behaviour\internal\UpdateMovementInternalFakePlayerBehaviour;
 use muqsit\fakeplayer\info\FakePlayerInfo;
 use muqsit\fakeplayer\listener\FakePlayerListener;
 use muqsit\fakeplayer\network\FakePlayerNetworkSession;
@@ -25,6 +28,7 @@ use pocketmine\player\Player;
 use pocketmine\player\XboxLivePlayerInfo;
 use pocketmine\plugin\PluginBase;
 use pocketmine\scheduler\ClosureTask;
+use pocketmine\utils\Limits;
 use Ramsey\Uuid\Uuid;
 use ReflectionMethod;
 use ReflectionProperty;
@@ -115,6 +119,10 @@ final class Loader extends PluginBase implements Listener{
 		$player = $session->getPlayer();
 		assert($player !== null);
 		$this->fake_players[$player->getUniqueId()->getBytes()] = $fake_player = new FakePlayer($session);
+
+		$movement_data = FakePlayerMovementData::new();
+		$fake_player->addBehaviour(new TryChangeMovementInternalFakePlayerBehaviour($movement_data), Limits::INT32_MIN);
+		$fake_player->addBehaviour(new UpdateMovementInternalFakePlayerBehaviour($movement_data), Limits::INT32_MAX);
 		foreach($info->behaviours as $behaviour_identifier => $behaviour_data){
 			$fake_player->addBehaviour(FakePlayerBehaviourFactory::create($behaviour_identifier, $behaviour_data));
 		}
