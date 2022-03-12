@@ -110,10 +110,6 @@ final class Loader extends PluginBase implements Listener{
 		$packet->encode($serializer);
 		$session->handleDataPacket($packet, $serializer->getBuffer());
 
-		$rp = new ReflectionMethod(NetworkSession::class, "beginSpawnSequence");
-		$rp->setAccessible(true);
-		$rp->invoke($session);
-
 		$session->getPlayer()->setViewDistance(4);
 
 		$player = $session->getPlayer();

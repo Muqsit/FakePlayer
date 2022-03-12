@@ -1,4 +1,4 @@
 name: FakePlayer
 main: muqsit\fakeplayer\Loader
 api: 4.0.0
-version: 0.1.3
+version: 0.1.4
