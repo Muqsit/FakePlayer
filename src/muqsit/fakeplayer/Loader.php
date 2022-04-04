@@ -20,9 +20,13 @@ use pocketmine\network\mcpe\compression\ZlibCompressor;
 use pocketmine\network\mcpe\convert\GlobalItemTypeDictionary;
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\PacketPool;
+use pocketmine\network\mcpe\protocol\ProtocolInfo;
 use pocketmine\network\mcpe\protocol\ResourcePackClientResponsePacket;
 use pocketmine\network\mcpe\protocol\serializer\PacketSerializer;
 use pocketmine\network\mcpe\protocol\serializer\PacketSerializerContext;
+use pocketmine\network\mcpe\protocol\types\DeviceOS;
+use pocketmine\network\mcpe\protocol\types\InputMode;
+use pocketmine\network\mcpe\protocol\types\login\ClientData;
 use pocketmine\network\mcpe\StandardPacketBroadcaster;
 use pocketmine\player\Player;
 use pocketmine\player\XboxLivePlayerInfo;
@@ -30,8 +34,12 @@ use pocketmine\plugin\PluginBase;
 use pocketmine\scheduler\ClosureTask;
 use pocketmine\utils\Limits;
 use Ramsey\Uuid\Uuid;
+use ReflectionClass;
 use ReflectionMethod;
 use ReflectionProperty;
+use RuntimeException;
+use function array_merge;
+use function str_contains;
 
 final class Loader extends PluginBase implements Listener{
 
@@ -41,7 +49,36 @@ final class Loader extends PluginBase implements Listener{
 	/** @var FakePlayer[] */
 	private array $fake_players = [];
 
+	/** @var array<string, mixed> */
+	private array $default_extra_data = [
+		"CurrentInputMode" => InputMode::MOUSE_KEYBOARD, /** @see ClientData::$CurrentInputMode */
+		"DefaultInputMode" => InputMode::MOUSE_KEYBOARD, /** @see ClientData::$DefaultInputMode */
+		"DeviceOS" => DeviceOS::DEDICATED, /** @see ClientData::$DeviceOS */
+		"GameVersion" => ProtocolInfo::MINECRAFT_VERSION_NETWORK, /** @see ClientData::$DeviceOS */
+	];
+
 	protected function onEnable() : void{
+		$client_data = new ReflectionClass(ClientData::class);
+		foreach($client_data->getProperties() as $property){
+			$comment = $property->getDocComment();
+			if($comment === false || !in_array("@required", explode(PHP_EOL, $comment), true)){
+				continue;
+			}
+
+			$property_name = $property->getName();
+			if(isset($this->default_extra_data[$property_name])){
+				continue;
+			}
+
+			$this->default_extra_data[$property_name] = $property->hasDefaultValue() ? $property->getDefaultValue() : match($property->getType()?->getName()){
+				"string" => "",
+				"int" => 0,
+				"array" => [],
+				"bool" => false,
+				default => throw new RuntimeException("Cannot map default value for property: " . ClientData::class . "::{$property_name}")
+			};
+		}
+
 		$command = new PluginCommand("fakeplayer", $this, new FakePlayerCommandExecutor($this));
 		$command->setDescription("Control fake player");
 		$command->setAliases(["fp"]);
@@ -98,7 +135,7 @@ final class Loader extends PluginBase implements Listener{
 
 		$rp = new ReflectionProperty(NetworkSession::class, "info");
 		$rp->setAccessible(true);
-		$rp->setValue($session, new XboxLivePlayerInfo($info->xuid, $info->username, $info->uuid, $info->skin, "en_US" /* TODO: Make locale configurable? */, $info->extra_data));
+		$rp->setValue($session, new XboxLivePlayerInfo($info->xuid, $info->username, $info->uuid, $info->skin, "en_US" /* TODO: Make locale configurable? */, array_merge($info->extra_data, $this->default_extra_data)));
 
 		$rp = new ReflectionMethod(NetworkSession::class, "onServerLoginSuccess");
 		$rp->setAccessible(true);
