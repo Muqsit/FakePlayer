@@ -54,7 +54,7 @@ final class Loader extends PluginBase implements Listener{
 		"CurrentInputMode" => InputMode::MOUSE_KEYBOARD, /** @see ClientData::$CurrentInputMode */
 		"DefaultInputMode" => InputMode::MOUSE_KEYBOARD, /** @see ClientData::$DefaultInputMode */
 		"DeviceOS" => DeviceOS::DEDICATED, /** @see ClientData::$DeviceOS */
-		"GameVersion" => ProtocolInfo::MINECRAFT_VERSION_NETWORK, /** @see ClientData::$DeviceOS */
+		"GameVersion" => ProtocolInfo::MINECRAFT_VERSION_NETWORK, /** @see ClientData::$GameVersion */
 	];
 
 	protected function onEnable() : void{
