@@ -4,6 +4,6 @@ api: 4.0.0
 version: 0.1.4
 
 permissions:
-  fakeplayer.command.fp:
+  fakeplayer.command.fakeplayer:
     description: "Control fake player"
     default: op
