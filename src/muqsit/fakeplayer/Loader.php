@@ -80,6 +80,7 @@ final class Loader extends PluginBase implements Listener{
 		}
 
 		$command = new PluginCommand("fakeplayer", $this, new FakePlayerCommandExecutor($this));
+		$command->setPermission("fakeplayer.command.fakeplayer");
 		$command->setDescription("Control fake player");
 		$command->setAliases(["fp"]);
 		$this->getServer()->getCommandMap()->register($this->getName(), $command);
