@@ -27,7 +27,7 @@ Once a fake player joins, you can chat or run commands on their behalf using:<br
 ## API Documentation
 ### Adding a fake player
 ```php
-Loader::addPlayer(FakePlayerInfo $info) : Player;
+Loader::addPlayer(FakePlayerInfo $info) : Promise;
 ```
 Fake players can be spawned in during runtime using `Loader::addPlayer()`. `FakePlayerInfo` consists of player identity and miscellaneous data and can be built easily using `FakePlayerInfoBuilder`.
 ```php
