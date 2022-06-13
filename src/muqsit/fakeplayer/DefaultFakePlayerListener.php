@@ -42,9 +42,7 @@ final class DefaultFakePlayerListener implements FakePlayerListener{
 			if($packet->status === PlayStatusPacket::PLAYER_SPAWN){
 				$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(static function() use($session, $entity_runtime_id) : void{
 					if($session->isConnected()){
-						$packet = new SetLocalPlayerAsInitializedPacket();
-						$packet->actorRuntimeId = $entity_runtime_id;
-
+						$packet = SetLocalPlayerAsInitializedPacket::create($entity_runtime_id);
 						$serializer = PacketSerializer::encoder(new PacketSerializerContext(GlobalItemTypeDictionary::getInstance()->getDictionary()));
 						$packet->encode($serializer);
 						$session->handleDataPacket($packet, $serializer->getBuffer());
@@ -75,6 +73,7 @@ final class DefaultFakePlayerListener implements FakePlayerListener{
 						$packet = PlayerActionPacket::create(
 							$player->getId(),
 							PlayerAction::DIMENSION_CHANGE_ACK,
+							BlockPosition::fromVector3($player->getPosition()->floor()),
 							BlockPosition::fromVector3($player->getPosition()->floor()),
 							0
 						);

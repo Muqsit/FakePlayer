@@ -161,8 +161,7 @@ final class Loader extends PluginBase implements Listener{
 		$rp->setAccessible(true);
 		$rp->invoke($session);
 
-		$packet = new ResourcePackClientResponsePacket();
-		$packet->status = ResourcePackClientResponsePacket::STATUS_COMPLETED;
+		$packet = ResourcePackClientResponsePacket::create(ResourcePackClientResponsePacket::STATUS_COMPLETED, []);
 		$serializer = PacketSerializer::encoder(new PacketSerializerContext(GlobalItemTypeDictionary::getInstance()->getDictionary()));
 		$packet->encode($serializer);
 		$session->handleDataPacket($packet, $serializer->getBuffer());
