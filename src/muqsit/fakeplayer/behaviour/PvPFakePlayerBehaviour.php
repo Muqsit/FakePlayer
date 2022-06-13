@@ -59,7 +59,7 @@ class PvPFakePlayerBehaviour implements FakePlayerBehaviour{
 		$player = $fake_player->getPlayer();
 		if($player->onGround && $player->isAlive()){
 			$motion = $player->getMotion();
-			if($motion->y === -0.0672){
+			if($motion->y == 0){
 				if($this->pvp_idle_time > 0 && $player->ticksLived - $this->last_movement > $this->pvp_idle_time){
 					$pos = $player->getSpawn()->asPosition();
 					$pos->x += 3 * (lcg_value() * 2 - 1);
