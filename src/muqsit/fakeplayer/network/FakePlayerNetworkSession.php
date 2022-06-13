@@ -22,18 +22,44 @@ use ReflectionProperty;
 
 class FakePlayerNetworkSession extends NetworkSession{
 
-	/** @var PromiseResolver */
-	private $playerResolver;
-
 	/** @var FakePlayerPacketListener[] */
 	private $packet_listeners = [];
+
+	/** @var PromiseResolver<Player>|null */
+	private $player_add_resolver;
 
 	/** @var FakePlayerSpecificPacketListener|null */
 	private $specific_packet_listener;
 
-	public function __construct(Server $server, NetworkSessionManager $manager, PacketPool $packetPool, PacketSender $sender, PacketBroadcaster $broadcaster, Compressor $compressor, string $ip, int $port){
+	/**
+	 * @param Server $server
+	 * @param NetworkSessionManager $manager
+	 * @param PacketPool $packetPool
+	 * @param PacketSender $sender
+	 * @param PacketBroadcaster $broadcaster
+	 * @param Compressor $compressor
+	 * @param string $ip
+	 * @param int $port
+	 * @param PromiseResolver<Player> $player_add_resolver
+	 */
+	public function __construct(
+		Server $server,
+		NetworkSessionManager $manager,
+		PacketPool $packetPool,
+		PacketSender $sender,
+		PacketBroadcaster $broadcaster,
+		Compressor $compressor,
+		string $ip,
+		int $port,
+		PromiseResolver $player_add_resolver
+	){
         parent::__construct($server, $manager, $packetPool, $sender, $broadcaster, $compressor, $ip, $port);
-		$this->playerResolver = new PromiseResolver;
+		$this->player_add_resolver = $player_add_resolver;
+
+		// do not store the resolver eternally
+		$this->player_add_resolver->getPromise()->onCompletion(function(Player $_) : void{
+			$this->player_add_resolver = null;
+		}, function() : void{ $this->player_add_resolver = null; });
 	}
 
 	public function registerPacketListener(FakePlayerPacketListener $listener) : void{
@@ -70,29 +96,28 @@ class FakePlayerNetworkSession extends NetworkSession{
 	}
 
 	protected function createPlayer(): void{
-		$getProp = function (string $name){
+		$get_prop = function(string $name) : mixed{
 			$rp = new ReflectionProperty(NetworkSession::class, $name);
 			$rp->setAccessible(true);
 			return $rp->getValue($this);
 		};
 
-		$server = $getProp('server');
-		$info = $getProp('info');
-		$authenticated = $getProp('authenticated');
-		$cachedOfflinePlayerData = $getProp('cachedOfflinePlayerData');
-
-		$server->createPlayer($this, $info, $authenticated, $cachedOfflinePlayerData)->onCompletion(
-			function (Player $player){
-				$rm = new ReflectionMethod(NetworkSession::class, 'onPlayerCreated');
-				$rm->setAccessible(true);
-				$rm->invoke($this, $player);
-				$this->playerResolver->resolve($player);
-			},
-			fn() => $this->disconnect("Player creation failed")
-		);
+		$info = $get_prop("info");
+		$authenticated = $get_prop("authenticated");
+		$cached_offline_player_data = $get_prop("cachedOfflinePlayerData");
+		Server::getInstance()->createPlayer($this, $info, $authenticated, $cached_offline_player_data)->onCompletion(function(Player $player) : void{
+			$this->onPlayerCreated($player);
+		}, function() : void{
+			$this->disconnect("Player creation failed");
+			$this->player_add_resolver->reject();
+		});
 	}
 
-	public function getPlayerPromise() : Promise{
-		return $this->playerResolver->getPromise();
+	private function onPlayerCreated(Player $player) : void{
+		// call parent private method
+		$rm = new ReflectionMethod(NetworkSession::class, "onPlayerCreated");
+		$rm->setAccessible(true);
+		$rm->invoke($this, $player);
+		$this->player_add_resolver->resolve($player);
 	}
 }
