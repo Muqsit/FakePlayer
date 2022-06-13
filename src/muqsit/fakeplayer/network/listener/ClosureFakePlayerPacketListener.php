@@ -11,8 +11,7 @@ use pocketmine\utils\Utils;
 
 final class ClosureFakePlayerPacketListener implements FakePlayerPacketListener{
 
-	/** @var Closure */
-	private $listener;
+	private Closure $listener;
 
 	public function __construct(Closure $closure){
 		Utils::validateCallableSignature(static function(ClientboundPacket $packet, NetworkSession $session) : void{}, $closure);

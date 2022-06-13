@@ -14,7 +14,6 @@ use pocketmine\network\mcpe\protocol\ClientboundPacket;
 use pocketmine\network\mcpe\protocol\PacketPool;
 use pocketmine\network\NetworkSessionManager;
 use pocketmine\player\Player;
-use pocketmine\promise\Promise;
 use pocketmine\promise\PromiseResolver;
 use pocketmine\Server;
 use ReflectionMethod;
@@ -23,13 +22,12 @@ use ReflectionProperty;
 class FakePlayerNetworkSession extends NetworkSession{
 
 	/** @var FakePlayerPacketListener[] */
-	private $packet_listeners = [];
+	private array $packet_listeners = [];
 
 	/** @var PromiseResolver<Player>|null */
-	private $player_add_resolver;
+	private ?PromiseResolver $player_add_resolver;
 
-	/** @var FakePlayerSpecificPacketListener|null */
-	private $specific_packet_listener;
+	private ?FakePlayerSpecificPacketListener $specific_packet_listener = null;
 
 	/**
 	 * @param Server $server

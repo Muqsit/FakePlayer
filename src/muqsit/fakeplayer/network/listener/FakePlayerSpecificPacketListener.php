@@ -13,7 +13,7 @@ use pocketmine\network\mcpe\protocol\ClientboundPacket;
 final class FakePlayerSpecificPacketListener implements FakePlayerPacketListener{
 
 	/** @var FakePlayerPacketListener[][] */
-	private $listeners = [];
+	private array $listeners = [];
 
 	/**
 	 * @param string $packet

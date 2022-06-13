@@ -17,20 +17,16 @@ use pocketmine\network\mcpe\protocol\RespawnPacket;
 use pocketmine\network\mcpe\protocol\serializer\PacketSerializer;
 use pocketmine\network\mcpe\protocol\serializer\PacketSerializerContext;
 use pocketmine\network\mcpe\protocol\SetLocalPlayerAsInitializedPacket;
-use pocketmine\network\mcpe\protocol\TextPacket;
 use pocketmine\network\mcpe\protocol\types\BlockPosition;
 use pocketmine\network\mcpe\protocol\types\PlayerAction;
 use pocketmine\player\Player;
 use pocketmine\scheduler\ClosureTask;
-use pocketmine\Server;
 
 final class DefaultFakePlayerListener implements FakePlayerListener{
 
-	private Loader $plugin;
-
-	public function __construct(Loader $plugin){
-		$this->plugin = $plugin;
-	}
+	public function __construct(
+		private Loader $plugin
+	){}
 
 	public function onPlayerAdd(Player $player) : void{
 		$session = $player->getNetworkSession();
