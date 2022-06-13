@@ -40,6 +40,16 @@ $plugin->addPlayer(FakePlayerInfoBuilder::create()
 	->setSkin(/* some skin */) // optional ;), defaults to a white skin
 	// ...
 ->build());
+
+// To obtain a Player instance after adding a player
+$plugin->addPlayer(...)->onCompletion(
+	function(Player $player) : void{
+		echo "Added player ", $player->getName(), " successfully";
+	},
+	function() : void{
+		// adding player failed
+	}
+);
 ```
 
 ### Test for fake player
