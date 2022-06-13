@@ -31,7 +31,10 @@ use pocketmine\network\mcpe\StandardPacketBroadcaster;
 use pocketmine\player\Player;
 use pocketmine\player\XboxLivePlayerInfo;
 use pocketmine\plugin\PluginBase;
+use pocketmine\promise\Promise;
+use pocketmine\promise\PromiseResolver;
 use pocketmine\scheduler\ClosureTask;
+use pocketmine\utils\AssumptionFailedError;
 use pocketmine\utils\Limits;
 use Ramsey\Uuid\Uuid;
 use ReflectionClass;
@@ -127,7 +130,7 @@ final class Loader extends PluginBase implements Listener{
 		return $this->fake_players[$player->getUniqueId()->getBytes()] ?? null;
 	}
 
-	public function addPlayer(FakePlayerInfo $info) : Player{
+	public function addPlayer(FakePlayerInfo $info) : Promise{
 		$server = $this->getServer();
 		$network = $server->getNetwork();
 
@@ -148,28 +151,34 @@ final class Loader extends PluginBase implements Listener{
 		$packet->encode($serializer);
 		$session->handleDataPacket($packet, $serializer->getBuffer());
 
-		$session->getPlayer()->setViewDistance(4);
+		// Create a new promise, to make sure a FakePlayer is always
+		// registered before the caller's onCompletion is called.
+		$playerResolver = new PromiseResolver;
+		$session->getPlayerPromise()->onCompletion(
+			function (Player $player) use ($info, $session, $playerResolver) {
+				$player->setViewDistance(4);
 
-		$player = $session->getPlayer();
-		assert($player !== null);
-		$this->fake_players[$player->getUniqueId()->getBytes()] = $fake_player = new FakePlayer($session);
+				$this->fake_players[$player->getUniqueId()->getBytes()] = $fake_player = new FakePlayer($session);
 
-		$movement_data = FakePlayerMovementData::new();
-		$fake_player->addBehaviour(new TryChangeMovementInternalFakePlayerBehaviour($movement_data), Limits::INT32_MIN);
-		$fake_player->addBehaviour(new UpdateMovementInternalFakePlayerBehaviour($movement_data), Limits::INT32_MAX);
-		foreach($info->behaviours as $behaviour_identifier => $behaviour_data){
-			$fake_player->addBehaviour(FakePlayerBehaviourFactory::create($behaviour_identifier, $behaviour_data));
-		}
+				$movement_data = FakePlayerMovementData::new();
+				$fake_player->addBehaviour(new TryChangeMovementInternalFakePlayerBehaviour($movement_data), Limits::INT32_MIN);
+				$fake_player->addBehaviour(new UpdateMovementInternalFakePlayerBehaviour($movement_data), Limits::INT32_MAX);
+				foreach($info->behaviours as $behaviour_identifier => $behaviour_data){
+					$fake_player->addBehaviour(FakePlayerBehaviourFactory::create($behaviour_identifier, $behaviour_data));
+				}
 
-		foreach($this->listeners as $listener){
-			$listener->onPlayerAdd($player);
-		}
+				foreach($this->listeners as $listener){
+					$listener->onPlayerAdd($player);
+				}
 
-		if(!$player->isAlive()){
-			$player->respawn();
-		}
-
-		return $player;
+				if(!$player->isAlive()){
+					$player->respawn();
+				}
+				$playerResolver->resolve($player);
+			},
+			static fn() => throw new AssumptionFailedError("FakePlayerNetworkSession::getPlayerPromise() shouldn't reject")
+		);
+		return $playerResolver->getPromise();
 	}
 
 	public function removePlayer(Player $player, bool $disconnect = true) : void{
