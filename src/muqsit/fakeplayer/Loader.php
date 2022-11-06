@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace muqsit\fakeplayer;
 
-use Closure;
 use InvalidArgumentException;
 use muqsit\fakeplayer\behaviour\FakePlayerBehaviourFactory;
 use muqsit\fakeplayer\behaviour\internal\FakePlayerMovementData;
@@ -35,7 +34,6 @@ use pocketmine\plugin\PluginBase;
 use pocketmine\promise\Promise;
 use pocketmine\promise\PromiseResolver;
 use pocketmine\scheduler\ClosureTask;
-use pocketmine\utils\AssumptionFailedError;
 use pocketmine\utils\Limits;
 use Ramsey\Uuid\Uuid;
 use ReflectionClass;
@@ -43,7 +41,6 @@ use ReflectionMethod;
 use ReflectionProperty;
 use RuntimeException;
 use function array_merge;
-use function str_contains;
 
 final class Loader extends PluginBase implements Listener{
 
