@@ -11,18 +11,31 @@ use pocketmine\command\Command;
 use pocketmine\command\CommandExecutor;
 use pocketmine\command\CommandSender;
 use pocketmine\math\Vector3;
+use pocketmine\network\mcpe\convert\GlobalItemTypeDictionary;
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\ClientboundPacket;
+use pocketmine\network\mcpe\protocol\ModalFormResponsePacket;
+use pocketmine\network\mcpe\protocol\Packet;
+use pocketmine\network\mcpe\protocol\serializer\PacketSerializer;
+use pocketmine\network\mcpe\protocol\serializer\PacketSerializerContext;
 use pocketmine\network\mcpe\protocol\TextPacket;
 use pocketmine\player\Player;
 use pocketmine\utils\TextFormat;
 use ReflectionProperty;
+use function json_encode;
 
 final class FakePlayerCommandExecutor implements CommandExecutor{
 
 	public function __construct(
 		private Loader $plugin
 	){}
+
+	private function sendServerPacket(Player $sender, Packet $packet) : void{
+		$context = new PacketSerializerContext(GlobalItemTypeDictionary::getInstance()->getDictionary());
+		$serializer = PacketSerializer::encoder($context);
+		$packet->encode($serializer);
+		$sender->getNetworkSession()->handleDataPacket($packet, $serializer->getBuffer());
+	}
 
 	public function onCommand(CommandSender $sender, Command $command, string $label, array $args) : bool{
 		if(isset($args[0])){
@@ -66,18 +79,22 @@ final class FakePlayerCommandExecutor implements CommandExecutor{
 											$_formIdCounter = new ReflectionProperty(Player::class, "formIdCounter");
 											$_formIdCounter->setAccessible(true);
 											$form_id = $_formIdCounter->getValue($player) - 1;
+
+											$data = null;
 											if($args[2] === "button"){
-												$player->onFormSubmit($form_id, (int) $args[3]);
-												return true;
-											}
-											if($args[2] === "raw"){
+												$data = json_encode((int) $args[3], JSON_THROW_ON_ERROR);
+											}elseif($args[2] === "raw"){
 												try{
 													$response = json_decode(implode(" ", array_slice($args, 3)), false, 512, JSON_THROW_ON_ERROR);
 												}catch(JsonException $e){
 													$sender->sendMessage(TextFormat::RED . "Failed to parse JSON: {$e->getMessage()}");
 													return true;
 												}
-												$player->onFormSubmit($form_id, $response);
+												$data = json_encode($response, JSON_THROW_ON_ERROR);
+											}
+
+											if($data !== null){
+												$this->sendServerPacket($player, ModalFormResponsePacket::response($form_id, $data));
 												return true;
 											}
 										}
