@@ -34,6 +34,7 @@ use pocketmine\plugin\PluginBase;
 use pocketmine\promise\Promise;
 use pocketmine\promise\PromiseResolver;
 use pocketmine\scheduler\ClosureTask;
+use pocketmine\utils\Filesystem;
 use pocketmine\utils\Limits;
 use Ramsey\Uuid\Uuid;
 use ReflectionClass;
@@ -218,7 +219,7 @@ final class Loader extends PluginBase implements Listener{
 	 * @return array<string, Promise<Player>>
 	 */
 	public function addConfiguredPlayers() : array{
-		$players = json_decode(file_get_contents($this->getDataFolder() . "players.json"), true, 512, JSON_THROW_ON_ERROR);
+		$players = json_decode(Filesystem::fileGetContents($this->getDataFolder() . "players.json"), true, 512, JSON_THROW_ON_ERROR);
 
 		$_skin_data = $this->getResource("skin.rgba");
 		$skin_data = stream_get_contents($_skin_data);
