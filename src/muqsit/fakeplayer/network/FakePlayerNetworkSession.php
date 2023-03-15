@@ -10,8 +10,8 @@ use pocketmine\network\mcpe\compression\Compressor;
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\PacketBroadcaster;
 use pocketmine\network\mcpe\PacketSender;
-use pocketmine\network\mcpe\protocol\ClientboundPacket;
 use pocketmine\network\mcpe\protocol\PacketPool;
+use pocketmine\network\mcpe\protocol\serializer\PacketSerializer;
 use pocketmine\network\NetworkSessionManager;
 use pocketmine\player\Player;
 use pocketmine\promise\PromiseResolver;
@@ -86,8 +86,13 @@ class FakePlayerNetworkSession extends NetworkSession{
 		}
 	}
 
-	public function addToSendBuffer(ClientboundPacket $packet) : void{
-		parent::addToSendBuffer($packet);
+	public function addToSendBuffer(string $buffer) : void{
+		parent::addToSendBuffer($buffer);
+		$rp = new ReflectionProperty(NetworkSession::class, 'packetPool');
+		$rp->setAccessible(true);
+		$packetPool = $rp->getValue($this);
+		$packet = $packetPool->getPacket($buffer);
+		$packet->decode(PacketSerializer::decoder($buffer, 0, $this->getPacketSerializerContext()));
 		foreach($this->packet_listeners as $listener){
 			$listener->onPacketSend($packet, $this);
 		}
