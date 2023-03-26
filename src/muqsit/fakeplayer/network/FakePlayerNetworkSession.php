@@ -23,13 +23,13 @@ use ReflectionProperty;
 
 class FakePlayerNetworkSession extends NetworkSession{
 
-	/** @var FakePlayerPacketListener[] */
-	private array $packet_listeners = [];
+    /** @var FakePlayerPacketListener[] */
+    private array $packet_listeners = [];
 
-	/** @var PromiseResolver<Player>|null */
-	private ?PromiseResolver $player_add_resolver;
+    /** @var PromiseResolver<Player>|null */
+    private ?PromiseResolver $player_add_resolver;
 
-	private ?FakePlayerSpecificPacketListener $specific_packet_listener = null;
+    private ?FakePlayerSpecificPacketListener $specific_packet_listener = null;
 
     /**
      * @param Server $server
@@ -58,75 +58,75 @@ class FakePlayerNetworkSession extends NetworkSession{
         PromiseResolver $player_add_resolver
     ){
         parent::__construct($server, $manager, $packetPool, $packetSerializerContext, $sender, $broadcaster, $entityEventBroadcaster, $compressor, $ip, $port);
-		$this->player_add_resolver = $player_add_resolver;
+        $this->player_add_resolver = $player_add_resolver;
 
-		// do not store the resolver eternally
-		$this->player_add_resolver->getPromise()->onCompletion(function(Player $_) : void{
-			$this->player_add_resolver = null;
-		}, function() : void{ $this->player_add_resolver = null; });
-	}
+        // do not store the resolver eternally
+        $this->player_add_resolver->getPromise()->onCompletion(function(Player $_) : void{
+            $this->player_add_resolver = null;
+        }, function() : void{ $this->player_add_resolver = null; });
+    }
 
-	public function registerPacketListener(FakePlayerPacketListener $listener) : void{
-		$this->packet_listeners[spl_object_id($listener)] = $listener;
-	}
+    public function registerPacketListener(FakePlayerPacketListener $listener) : void{
+        $this->packet_listeners[spl_object_id($listener)] = $listener;
+    }
 
-	public function unregisterPacketListener(FakePlayerPacketListener $listener) : void{
-		unset($this->packet_listeners[spl_object_id($listener)]);
-	}
+    public function unregisterPacketListener(FakePlayerPacketListener $listener) : void{
+        unset($this->packet_listeners[spl_object_id($listener)]);
+    }
 
-	public function registerSpecificPacketListener(string $packet, FakePlayerPacketListener $listener) : void{
-		if($this->specific_packet_listener === null){
-			$this->specific_packet_listener = new FakePlayerSpecificPacketListener();
-			$this->registerPacketListener($this->specific_packet_listener);
-		}
-		$this->specific_packet_listener->register($packet, $listener);
-	}
+    public function registerSpecificPacketListener(string $packet, FakePlayerPacketListener $listener) : void{
+        if($this->specific_packet_listener === null){
+            $this->specific_packet_listener = new FakePlayerSpecificPacketListener();
+            $this->registerPacketListener($this->specific_packet_listener);
+        }
+        $this->specific_packet_listener->register($packet, $listener);
+    }
 
-	public function unregisterSpecificPacketListener(string $packet, FakePlayerPacketListener $listener) : void{
-		if($this->specific_packet_listener !== null){
-			$this->specific_packet_listener->unregister($packet, $listener);
-			if($this->specific_packet_listener->isEmpty()){
-				$this->unregisterPacketListener($this->specific_packet_listener);
-				$this->specific_packet_listener = null;
-			}
-		}
-	}
+    public function unregisterSpecificPacketListener(string $packet, FakePlayerPacketListener $listener) : void{
+        if($this->specific_packet_listener !== null){
+            $this->specific_packet_listener->unregister($packet, $listener);
+            if($this->specific_packet_listener->isEmpty()){
+                $this->unregisterPacketListener($this->specific_packet_listener);
+                $this->specific_packet_listener = null;
+            }
+        }
+    }
 
-	public function addToSendBuffer(string $buffer) : void{
-		parent::addToSendBuffer($buffer);
-		$rp = new ReflectionProperty(NetworkSession::class, 'packetPool');
-		$rp->setAccessible(true);
-		$packetPool = $rp->getValue($this);
-		$packet = $packetPool->getPacket($buffer);
-		$packet->decode(PacketSerializer::decoder($buffer, 0, $this->getPacketSerializerContext()));
-		foreach($this->packet_listeners as $listener){
-			$listener->onPacketSend($packet, $this);
-		}
-	}
+    public function addToSendBuffer(string $buffer) : void{
+        parent::addToSendBuffer($buffer);
+        $rp = new ReflectionProperty(NetworkSession::class, 'packetPool');
+        $rp->setAccessible(true);
+        $packetPool = $rp->getValue($this);
+        $packet = $packetPool->getPacket($buffer);
+        $packet->decode(PacketSerializer::decoder($buffer, 0, $this->getPacketSerializerContext()));
+        foreach($this->packet_listeners as $listener){
+            $listener->onPacketSend($packet, $this);
+        }
+    }
 
-	protected function createPlayer(): void{
-		$get_prop = function(string $name) : mixed{
-			$rp = new ReflectionProperty(NetworkSession::class, $name);
-			$rp->setAccessible(true);
-			return $rp->getValue($this);
-		};
+    protected function createPlayer(): void{
+        $get_prop = function(string $name) : mixed{
+            $rp = new ReflectionProperty(NetworkSession::class, $name);
+            $rp->setAccessible(true);
+            return $rp->getValue($this);
+        };
 
-		$info = $get_prop("info");
-		$authenticated = $get_prop("authenticated");
-		$cached_offline_player_data = $get_prop("cachedOfflinePlayerData");
-		Server::getInstance()->createPlayer($this, $info, $authenticated, $cached_offline_player_data)->onCompletion(function(Player $player) : void{
-			$this->onPlayerCreated($player);
-		}, function() : void{
-			$this->disconnect("Player creation failed");
-			$this->player_add_resolver->reject();
-		});
-	}
+        $info = $get_prop("info");
+        $authenticated = $get_prop("authenticated");
+        $cached_offline_player_data = $get_prop("cachedOfflinePlayerData");
+        Server::getInstance()->createPlayer($this, $info, $authenticated, $cached_offline_player_data)->onCompletion(function(Player $player) : void{
+            $this->onPlayerCreated($player);
+        }, function() : void{
+            $this->disconnect("Player creation failed");
+            $this->player_add_resolver->reject();
+        });
+    }
 
-	private function onPlayerCreated(Player $player) : void{
-		// call parent private method
-		$rm = new ReflectionMethod(NetworkSession::class, "onPlayerCreated");
-		$rm->setAccessible(true);
-		$rm->invoke($this, $player);
-		$this->player_add_resolver->resolve($player);
-	}
+    private function onPlayerCreated(Player $player) : void{
+        // call parent private method
+        $rm = new ReflectionMethod(NetworkSession::class, "onPlayerCreated");
+        $rm->setAccessible(true);
+        $rm->invoke($this, $player);
+        $this->player_add_resolver->resolve($player);
+    }
 }
