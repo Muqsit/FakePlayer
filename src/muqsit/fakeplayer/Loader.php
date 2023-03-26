@@ -134,9 +134,9 @@ final class Loader extends PluginBase implements Listener{
 	 * @param FakePlayerInfo $info
 	 * @return Promise<Player>
 	 */
-	public function addPlayer(FakePlayerInfo $info) : Promise{
-		$server = $this->getServer();
-		$network = $server->getNetwork();
+    public function addPlayer(FakePlayerInfo $info) : Promise{
+        $server = $this->getServer();
+        $network = $server->getNetwork();
 
         $packetSerializerContext = new PacketSerializerContext(GlobalItemTypeDictionary::getInstance()->getDictionary());
         $packetBroadcaster = new StandardPacketBroadcaster($server, $packetSerializerContext);
@@ -155,50 +155,50 @@ final class Loader extends PluginBase implements Listener{
             $server->getPort(),
             $internal_resolver
         );
-		$network->getSessionManager()->add($session);
+        $network->getSessionManager()->add($session);
 
-		$rp = new ReflectionProperty(NetworkSession::class, "info");
-		$rp->setAccessible(true);
-		$rp->setValue($session, new XboxLivePlayerInfo($info->xuid, $info->username, $info->uuid, $info->skin, "en_US" /* TODO: Make locale configurable? */, array_merge($info->extra_data, $this->default_extra_data)));
+        $rp = new ReflectionProperty(NetworkSession::class, "info");
+        $rp->setAccessible(true);
+        $rp->setValue($session, new XboxLivePlayerInfo($info->xuid, $info->username, $info->uuid, $info->skin, "en_US" /* TODO: Make locale configurable? */, array_merge($info->extra_data, $this->default_extra_data)));
 
-		$rp = new ReflectionMethod(NetworkSession::class, "onServerLoginSuccess");
-		$rp->setAccessible(true);
-		$rp->invoke($session);
+        $rp = new ReflectionMethod(NetworkSession::class, "onServerLoginSuccess");
+        $rp->setAccessible(true);
+        $rp->invoke($session);
 
-		$packet = ResourcePackClientResponsePacket::create(ResourcePackClientResponsePacket::STATUS_COMPLETED, []);
-		$serializer = PacketSerializer::encoder(new PacketSerializerContext(GlobalItemTypeDictionary::getInstance()->getDictionary()));
-		$packet->encode($serializer);
-		$session->handleDataPacket($packet, $serializer->getBuffer());
+        $packet = ResourcePackClientResponsePacket::create(ResourcePackClientResponsePacket::STATUS_COMPLETED, []);
+        $serializer = PacketSerializer::encoder(new PacketSerializerContext(GlobalItemTypeDictionary::getInstance()->getDictionary()));
+        $packet->encode($serializer);
+        $session->handleDataPacket($packet, $serializer->getBuffer());
 
-		$internal_resolver->getPromise()->onCompletion(function(Player $player) use($info, $session) : void{
-			$player->setViewDistance(4);
+        $internal_resolver->getPromise()->onCompletion(function(Player $player) use($info, $session) : void{
+            $player->setViewDistance(4);
 
-			$this->fake_players[$player->getUniqueId()->getBytes()] = $fake_player = new FakePlayer($session);
+            $this->fake_players[$player->getUniqueId()->getBytes()] = $fake_player = new FakePlayer($session);
 
-			$movement_data = FakePlayerMovementData::new();
-			$fake_player->addBehaviour(new TryChangeMovementInternalFakePlayerBehaviour($movement_data), Limits::INT32_MIN);
-			$fake_player->addBehaviour(new UpdateMovementInternalFakePlayerBehaviour($movement_data), Limits::INT32_MAX);
-			foreach($info->behaviours as $behaviour_identifier => $behaviour_data){
-				$fake_player->addBehaviour(FakePlayerBehaviourFactory::create($behaviour_identifier, $behaviour_data));
-			}
+            $movement_data = FakePlayerMovementData::new();
+            $fake_player->addBehaviour(new TryChangeMovementInternalFakePlayerBehaviour($movement_data), Limits::INT32_MIN);
+            $fake_player->addBehaviour(new UpdateMovementInternalFakePlayerBehaviour($movement_data), Limits::INT32_MAX);
+            foreach($info->behaviours as $behaviour_identifier => $behaviour_data){
+                $fake_player->addBehaviour(FakePlayerBehaviourFactory::create($behaviour_identifier, $behaviour_data));
+            }
 
-			foreach($this->listeners as $listener){
-				$listener->onPlayerAdd($player);
-			}
+            foreach($this->listeners as $listener){
+                $listener->onPlayerAdd($player);
+            }
 
-			if(!$player->isAlive()){
-				$player->respawn();
-			}
-		}, static function() : void{ /* no internal steps to take if player creation failed */ });
+            if(!$player->isAlive()){
+                $player->respawn();
+            }
+        }, static function() : void{ /* no internal steps to take if player creation failed */ });
 
-		// Create a new promise, to make sure a FakePlayer is always
-		// registered before the caller's onCompletion is called.
-		$result = new PromiseResolver();
-		$internal_resolver->getPromise()->onCompletion(static function(Player $player) use($result) : void{
-			$result->resolve($player);
-		}, static function() use($result) : void{ $result->reject(); });
-		return $result->getPromise();
-	}
+        // Create a new promise, to make sure a FakePlayer is always
+        // registered before the caller's onCompletion is called.
+        $result = new PromiseResolver();
+        $internal_resolver->getPromise()->onCompletion(static function(Player $player) use($result) : void{
+            $result->resolve($player);
+        }, static function() use($result) : void{ $result->reject(); });
+        return $result->getPromise();
+    }
 
 	public function removePlayer(Player $player, bool $disconnect = true) : void{
 		if(!$this->isFakePlayer($player)){
