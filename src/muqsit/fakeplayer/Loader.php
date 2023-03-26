@@ -46,94 +46,94 @@ use function array_merge;
 
 final class Loader extends PluginBase implements Listener{
 
-	/** @var FakePlayerListener[] */
-	private array $listeners = [];
+    /** @var FakePlayerListener[] */
+    private array $listeners = [];
 
-	/** @var FakePlayer[] */
-	private array $fake_players = [];
+    /** @var FakePlayer[] */
+    private array $fake_players = [];
 
-	/** @var array<string, mixed> */
-	private array $default_extra_data = [
-		"CurrentInputMode" => InputMode::MOUSE_KEYBOARD, /** @see ClientData::$CurrentInputMode */
-		"DefaultInputMode" => InputMode::MOUSE_KEYBOARD, /** @see ClientData::$DefaultInputMode */
-		"DeviceOS" => DeviceOS::DEDICATED, /** @see ClientData::$DeviceOS */
-		"GameVersion" => ProtocolInfo::MINECRAFT_VERSION_NETWORK, /** @see ClientData::$GameVersion */
-	];
+    /** @var array<string, mixed> */
+    private array $default_extra_data = [
+        "CurrentInputMode" => InputMode::MOUSE_KEYBOARD, /** @see ClientData::$CurrentInputMode */
+        "DefaultInputMode" => InputMode::MOUSE_KEYBOARD, /** @see ClientData::$DefaultInputMode */
+        "DeviceOS" => DeviceOS::DEDICATED, /** @see ClientData::$DeviceOS */
+        "GameVersion" => ProtocolInfo::MINECRAFT_VERSION_NETWORK, /** @see ClientData::$GameVersion */
+    ];
 
-	protected function onEnable() : void{
-		$client_data = new ReflectionClass(ClientData::class);
-		foreach($client_data->getProperties() as $property){
-			$comment = $property->getDocComment();
-			if($comment === false || !in_array("@required", explode(PHP_EOL, $comment), true)){
-				continue;
-			}
+    protected function onEnable() : void{
+        $client_data = new ReflectionClass(ClientData::class);
+        foreach($client_data->getProperties() as $property){
+            $comment = $property->getDocComment();
+            if($comment === false || !in_array("@required", explode(PHP_EOL, $comment), true)){
+                continue;
+            }
 
-			$property_name = $property->getName();
-			if(isset($this->default_extra_data[$property_name])){
-				continue;
-			}
+            $property_name = $property->getName();
+            if(isset($this->default_extra_data[$property_name])){
+                continue;
+            }
 
-			$this->default_extra_data[$property_name] = $property->hasDefaultValue() ? $property->getDefaultValue() : match($property->getType()?->getName()){
-				"string" => "",
-				"int" => 0,
-				"array" => [],
-				"bool" => false,
-				default => throw new RuntimeException("Cannot map default value for property: " . ClientData::class . "::{$property_name}")
-			};
-		}
+            $this->default_extra_data[$property_name] = $property->hasDefaultValue() ? $property->getDefaultValue() : match($property->getType()?->getName()){
+                "string" => "",
+                "int" => 0,
+                "array" => [],
+                "bool" => false,
+                default => throw new RuntimeException("Cannot map default value for property: " . ClientData::class . "::{$property_name}")
+            };
+        }
 
-		$command = new PluginCommand("fakeplayer", $this, new FakePlayerCommandExecutor($this));
-		$command->setPermission("fakeplayer.command.fakeplayer");
-		$command->setDescription("Control fake player");
-		$command->setAliases(["fp"]);
-		$this->getServer()->getCommandMap()->register($this->getName(), $command);
+        $command = new PluginCommand("fakeplayer", $this, new FakePlayerCommandExecutor($this));
+        $command->setPermission("fakeplayer.command.fakeplayer");
+        $command->setDescription("Control fake player");
+        $command->setAliases(["fp"]);
+        $this->getServer()->getCommandMap()->register($this->getName(), $command);
 
-		$this->registerListener(new DefaultFakePlayerListener($this));
-		FakePlayerBehaviourFactory::registerDefaults($this);
+        $this->registerListener(new DefaultFakePlayerListener($this));
+        FakePlayerBehaviourFactory::registerDefaults($this);
 
-		$this->getScheduler()->scheduleRepeatingTask(new ClosureTask(function() : void{
-			foreach($this->fake_players as $player){
-				$player->tick();
-			}
-		}), 1);
+        $this->getScheduler()->scheduleRepeatingTask(new ClosureTask(function() : void{
+            foreach($this->fake_players as $player){
+                $player->tick();
+            }
+        }), 1);
 
-		$this->saveResource("players.json");
+        $this->saveResource("players.json");
 
-		$configured_players_add_delay = (int) $this->getConfig()->get("configured-players-add-delay");
-		if($configured_players_add_delay === -1){
-			$this->addConfiguredPlayers();
-		}else{
-			$this->getScheduler()->scheduleDelayedTask(new ClosureTask(function() : void{
-				$this->addConfiguredPlayers();
-			}), $configured_players_add_delay);
-		}
-		$this->getServer()->getPluginManager()->registerEvents($this, $this);
-	}
+        $configured_players_add_delay = (int) $this->getConfig()->get("configured-players-add-delay");
+        if($configured_players_add_delay === -1){
+            $this->addConfiguredPlayers();
+        }else{
+            $this->getScheduler()->scheduleDelayedTask(new ClosureTask(function() : void{
+                $this->addConfiguredPlayers();
+            }), $configured_players_add_delay);
+        }
+        $this->getServer()->getPluginManager()->registerEvents($this, $this);
+    }
 
-	public function registerListener(FakePlayerListener $listener) : void{
-		$this->listeners[spl_object_id($listener)] = $listener;
-		$server = $this->getServer();
-		foreach($this->fake_players as $uuid => $_){
-			$listener->onPlayerAdd($server->getPlayerByRawUUID($uuid));
-		}
-	}
+    public function registerListener(FakePlayerListener $listener) : void{
+        $this->listeners[spl_object_id($listener)] = $listener;
+        $server = $this->getServer();
+        foreach($this->fake_players as $uuid => $_){
+            $listener->onPlayerAdd($server->getPlayerByRawUUID($uuid));
+        }
+    }
 
-	public function unregisterListener(FakePlayerListener $listener) : void{
-		unset($this->listeners[spl_object_id($listener)]);
-	}
+    public function unregisterListener(FakePlayerListener $listener) : void{
+        unset($this->listeners[spl_object_id($listener)]);
+    }
 
-	public function isFakePlayer(Player $player) : bool{
-		return isset($this->fake_players[$player->getUniqueId()->getBytes()]);
-	}
+    public function isFakePlayer(Player $player) : bool{
+        return isset($this->fake_players[$player->getUniqueId()->getBytes()]);
+    }
 
-	public function getFakePlayer(Player $player) : ?FakePlayer{
-		return $this->fake_players[$player->getUniqueId()->getBytes()] ?? null;
-	}
+    public function getFakePlayer(Player $player) : ?FakePlayer{
+        return $this->fake_players[$player->getUniqueId()->getBytes()] ?? null;
+    }
 
-	/**
-	 * @param FakePlayerInfo $info
-	 * @return Promise<Player>
-	 */
+    /**
+     * @param FakePlayerInfo $info
+     * @return Promise<Player>
+     */
     public function addPlayer(FakePlayerInfo $info) : Promise{
         $server = $this->getServer();
         $network = $server->getNetwork();
@@ -200,55 +200,55 @@ final class Loader extends PluginBase implements Listener{
         return $result->getPromise();
     }
 
-	public function removePlayer(Player $player, bool $disconnect = true) : void{
-		if(!$this->isFakePlayer($player)){
-			throw new InvalidArgumentException("Invalid Player supplied, expected a fake player, got " . $player->getName());
-		}
+    public function removePlayer(Player $player, bool $disconnect = true) : void{
+        if(!$this->isFakePlayer($player)){
+            throw new InvalidArgumentException("Invalid Player supplied, expected a fake player, got " . $player->getName());
+        }
 
-		if(!isset($this->fake_players[$id = $player->getUniqueId()->getBytes()])){
-			return;
-		}
+        if(!isset($this->fake_players[$id = $player->getUniqueId()->getBytes()])){
+            return;
+        }
 
-		$this->fake_players[$id]->destroy();
-		unset($this->fake_players[$id]);
+        $this->fake_players[$id]->destroy();
+        unset($this->fake_players[$id]);
 
-		if($disconnect){
-			$player->disconnect("Removed");
-		}
+        if($disconnect){
+            $player->disconnect("Removed");
+        }
 
-		foreach($this->listeners as $listener){
-			$listener->onPlayerRemove($player);
-		}
-	}
+        foreach($this->listeners as $listener){
+            $listener->onPlayerRemove($player);
+        }
+    }
 
-	/**
-	 * @return array<string, Promise<Player>>
-	 */
-	public function addConfiguredPlayers() : array{
-		$players = json_decode(Filesystem::fileGetContents($this->getDataFolder() . "players.json"), true, 512, JSON_THROW_ON_ERROR);
+    /**
+     * @return array<string, Promise<Player>>
+     */
+    public function addConfiguredPlayers() : array{
+        $players = json_decode(Filesystem::fileGetContents($this->getDataFolder() . "players.json"), true, 512, JSON_THROW_ON_ERROR);
 
-		$_skin_data = $this->getResource("skin.rgba");
-		$skin_data = stream_get_contents($_skin_data);
-		fclose($_skin_data);
-		$skin = new Skin("Standard_Custom", $skin_data);
+        $_skin_data = $this->getResource("skin.rgba");
+        $skin_data = stream_get_contents($_skin_data);
+        fclose($_skin_data);
+        $skin = new Skin("Standard_Custom", $skin_data);
 
-		$promises = [];
-		foreach($players as $uuid => $data){
-			["xuid" => $xuid, "gamertag" => $gamertag] = $data;
-			$promises[$uuid] = $this->addPlayer(new FakePlayerInfo(Uuid::fromString($uuid), $xuid, $gamertag, $skin, $data["extra_data"] ?? [], $data["behaviours"] ?? []));
-		}
-		return $promises;
-	}
+        $promises = [];
+        foreach($players as $uuid => $data){
+            ["xuid" => $xuid, "gamertag" => $gamertag] = $data;
+            $promises[$uuid] = $this->addPlayer(new FakePlayerInfo(Uuid::fromString($uuid), $xuid, $gamertag, $skin, $data["extra_data"] ?? [], $data["behaviours"] ?? []));
+        }
+        return $promises;
+    }
 
-	/**
-	 * @param PlayerQuitEvent $event
-	 * @priority MONITOR
-	 */
-	public function onPlayerQuit(PlayerQuitEvent $event) : void{
-		$player = $event->getPlayer();
-		try{
-			$this->removePlayer($player, false);
-		}catch(InvalidArgumentException $e){
-		}
-	}
+    /**
+     * @param PlayerQuitEvent $event
+     * @priority MONITOR
+     */
+    public function onPlayerQuit(PlayerQuitEvent $event) : void{
+        $player = $event->getPlayer();
+        try{
+            $this->removePlayer($player, false);
+        }catch(InvalidArgumentException $e){
+        }
+    }
 }
