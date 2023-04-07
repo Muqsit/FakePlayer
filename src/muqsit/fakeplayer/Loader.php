@@ -27,6 +27,7 @@ use pocketmine\network\mcpe\protocol\serializer\PacketSerializerContext;
 use pocketmine\network\mcpe\protocol\types\DeviceOS;
 use pocketmine\network\mcpe\protocol\types\InputMode;
 use pocketmine\network\mcpe\protocol\types\login\ClientData;
+use pocketmine\network\mcpe\StandardEntityEventBroadcaster;
 use pocketmine\network\mcpe\StandardPacketBroadcaster;
 use pocketmine\player\Player;
 use pocketmine\player\XboxLivePlayerInfo;
@@ -136,14 +137,19 @@ final class Loader extends PluginBase implements Listener{
 	public function addPlayer(FakePlayerInfo $info) : Promise{
 		$server = $this->getServer();
 		$network = $server->getNetwork();
+		$packet_serializer_context = new PacketSerializerContext(GlobalItemTypeDictionary::getInstance()->getDictionary());
+		$packet_broadcaster = new StandardPacketBroadcaster($this->getServer(), $packet_serializer_context);
+		$entity_event_broadcaster = new StandardEntityEventBroadcaster($packet_broadcaster);
 
 		$internal_resolver = new PromiseResolver();
 		$session = new FakePlayerNetworkSession(
 			$server,
 			$network->getSessionManager(),
 			PacketPool::getInstance(),
+			$packet_serializer_context,
 			new FakePacketSender(),
-			new StandardPacketBroadcaster($server),
+			$packet_broadcaster,
+			$entity_event_broadcaster,
 			ZlibCompressor::getInstance(),
 			$server->getIp(),
 			$server->getPort(),
@@ -160,7 +166,7 @@ final class Loader extends PluginBase implements Listener{
 		$rp->invoke($session);
 
 		$packet = ResourcePackClientResponsePacket::create(ResourcePackClientResponsePacket::STATUS_COMPLETED, []);
-		$serializer = PacketSerializer::encoder(new PacketSerializerContext(GlobalItemTypeDictionary::getInstance()->getDictionary()));
+		$serializer = PacketSerializer::encoder($packet_serializer_context);
 		$packet->encode($serializer);
 		$session->handleDataPacket($packet, $serializer->getBuffer());
 
