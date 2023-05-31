@@ -95,7 +95,6 @@ class FakePlayerNetworkSession extends NetworkSession{
 	public function addToSendBuffer(string $buffer) : void{
 		parent::addToSendBuffer($buffer);
 		$rp = new ReflectionProperty(NetworkSession::class, 'packetPool');
-		$rp->setAccessible(true);
 		$packetPool = $rp->getValue($this);
 		$packet = $packetPool->getPacket($buffer);
 		$packet->decode(PacketSerializer::decoder($buffer, 0, $this->getPacketSerializerContext()));
@@ -107,7 +106,6 @@ class FakePlayerNetworkSession extends NetworkSession{
 	protected function createPlayer(): void{
 		$get_prop = function(string $name) : mixed{
 			$rp = new ReflectionProperty(NetworkSession::class, $name);
-			$rp->setAccessible(true);
 			return $rp->getValue($this);
 		};
 
@@ -125,7 +123,6 @@ class FakePlayerNetworkSession extends NetworkSession{
 	private function onPlayerCreated(Player $player) : void{
 		// call parent private method
 		$rm = new ReflectionMethod(NetworkSession::class, "onPlayerCreated");
-		$rm->setAccessible(true);
 		$rm->invoke($this, $player);
 		$this->player_add_resolver->resolve($player);
 	}

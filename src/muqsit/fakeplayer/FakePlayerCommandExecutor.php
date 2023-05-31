@@ -77,7 +77,6 @@ final class FakePlayerCommandExecutor implements CommandExecutor{
 									case "form":
 										if(isset($args[2]) && isset($args[3])){
 											$_formIdCounter = new ReflectionProperty(Player::class, "formIdCounter");
-											$_formIdCounter->setAccessible(true);
 											$form_id = $_formIdCounter->getValue($player) - 1;
 
 											$data = null;

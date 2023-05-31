@@ -158,11 +158,9 @@ final class Loader extends PluginBase implements Listener{
 		$network->getSessionManager()->add($session);
 
 		$rp = new ReflectionProperty(NetworkSession::class, "info");
-		$rp->setAccessible(true);
 		$rp->setValue($session, new XboxLivePlayerInfo($info->xuid, $info->username, $info->uuid, $info->skin, "en_US" /* TODO: Make locale configurable? */, array_merge($info->extra_data, $this->default_extra_data)));
 
 		$rp = new ReflectionMethod(NetworkSession::class, "onServerLoginSuccess");
-		$rp->setAccessible(true);
 		$rp->invoke($session);
 
 		$packet = ResourcePackClientResponsePacket::create(ResourcePackClientResponsePacket::STATUS_COMPLETED, []);

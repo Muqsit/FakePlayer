@@ -22,33 +22,23 @@ final class UpdateMovementInternalFakePlayerBehaviour implements FakePlayerBehav
 	}
 
 	private static function readMovementFromPlayer(Player $player) : Vector3{
+		/** @see Human::$motion */
 		static $_motion = null;
-		if($_motion === null){
-			/** @see Human::$motion */
-			$_motion = new ReflectionProperty(Human::class, "motion");
-			$_motion->setAccessible(true);
-		}
-
+		$_motion ??= new ReflectionProperty(Human::class, "motion");
 		return $_motion->getValue($player)->asVector3();
 	}
 
 	private static function movePlayer(Player $player, Vector3 $dv) : void{
+		/** @see Human::move() */
 		static $reflection_method = null;
-		if($reflection_method === null){
-			/** @see Human::move() */
-			$reflection_method = new ReflectionMethod(Human::class, "move");
-			$reflection_method->setAccessible(true);
-		}
+		$reflection_method ??= new ReflectionMethod(Human::class, "move");
 		$reflection_method->getClosure($player)($dv->x, $dv->y, $dv->z);
 	}
 
 	private static function setPlayerLocation(Player $player, Location $location) : void{
+		/** @see Human::$location */
 		static $reflection_property = null;
-		if($reflection_property === null){
-			/** @see Human::$location */
-			$reflection_property = new ReflectionProperty(Human::class, "location");
-			$reflection_property->setAccessible(true);
-		}
+		$reflection_property ??= new ReflectionProperty(Human::class, "location");
 		$reflection_property->setValue($player, $location);
 	}
 

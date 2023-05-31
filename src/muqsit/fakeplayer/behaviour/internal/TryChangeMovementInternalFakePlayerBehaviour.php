@@ -27,34 +27,23 @@ final class TryChangeMovementInternalFakePlayerBehaviour implements FakePlayerBe
 	}
 
 	private static function changeDrag(Player $player) : void{
+		/** @see Player::$drag */
 		static $_drag = null;
-		if($_drag === null){
-			/** @see Player::$drag */
-			$_drag = new ReflectionProperty(Entity::class, "drag");
-			$_drag->setAccessible(true);
-		}
-
+		$_drag ??= new ReflectionProperty(Entity::class, "drag");
 		$_drag->setValue($player, $_drag->getValue($player) * 8);
 	}
 
 	private static function writeMovementToPlayer(Player $player, Vector3 $motion) : void{
+		/** @see Player::$motion */
 		static $_motion = null;
-		if($_motion === null){
-			/** @see Player::$motion */
-			$_motion = new ReflectionProperty(Entity::class, "motion");
-			$_motion->setAccessible(true);
-		}
-
+		$_motion ??= new ReflectionProperty(Entity::class, "motion");
 		$_motion->setValue($player, $motion->asVector3());
 	}
 
 	private static function tryChangeMovement(Player $player) : void{
+		/** @see Human::tryChangeMovement() */
 		static $reflection_method = null;
-		if($reflection_method === null){
-			/** @see Human::tryChangeMovement() */
-			$reflection_method = new ReflectionMethod(Human::class, "tryChangeMovement");
-			$reflection_method->setAccessible(true);
-		}
+		$reflection_method ??= new ReflectionMethod(Human::class, "tryChangeMovement");
 		$reflection_method->getClosure($player)();
 	}
 
