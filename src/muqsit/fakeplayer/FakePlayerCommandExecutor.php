@@ -11,7 +11,7 @@ use pocketmine\command\Command;
 use pocketmine\command\CommandExecutor;
 use pocketmine\command\CommandSender;
 use pocketmine\math\Vector3;
-use pocketmine\network\mcpe\convert\GlobalItemTypeDictionary;
+use pocketmine\network\mcpe\convert\TypeConverter;
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\ClientboundPacket;
 use pocketmine\network\mcpe\protocol\ModalFormResponsePacket;
@@ -31,7 +31,7 @@ final class FakePlayerCommandExecutor implements CommandExecutor{
 	){}
 
 	private function sendServerPacket(Player $sender, Packet $packet) : void{
-		$context = new PacketSerializerContext(GlobalItemTypeDictionary::getInstance()->getDictionary());
+		$context = new PacketSerializerContext(TypeConverter::getInstance()->getItemTypeDictionary());
 		$serializer = PacketSerializer::encoder($context);
 		$packet->encode($serializer);
 		$sender->getNetworkSession()->handleDataPacket($packet, $serializer->getBuffer());
