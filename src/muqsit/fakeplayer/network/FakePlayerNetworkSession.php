@@ -7,6 +7,7 @@ namespace muqsit\fakeplayer\network;
 use muqsit\fakeplayer\network\listener\FakePlayerPacketListener;
 use muqsit\fakeplayer\network\listener\FakePlayerSpecificPacketListener;
 use pocketmine\network\mcpe\compression\Compressor;
+use pocketmine\network\mcpe\convert\TypeConverter;
 use pocketmine\network\mcpe\EntityEventBroadcaster;
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\PacketBroadcaster;
@@ -53,11 +54,12 @@ class FakePlayerNetworkSession extends NetworkSession{
 		PacketBroadcaster $broadcaster,
 		EntityEventBroadcaster $entityEventBroadcaster,
 		Compressor $compressor,
+		TypeConverter $typeConverter,
 		string $ip,
 		int $port,
 		PromiseResolver $player_add_resolver
 	){
-        parent::__construct($server, $manager, $packetPool, $packetSerializerContext, $sender, $broadcaster, $entityEventBroadcaster, $compressor, $ip, $port);
+        parent::__construct($server, $manager, $packetPool, $packetSerializerContext, $sender, $broadcaster, $entityEventBroadcaster, $compressor, $typeConverter, $ip, $port);
 		$this->player_add_resolver = $player_add_resolver;
 
 		// do not store the resolver eternally

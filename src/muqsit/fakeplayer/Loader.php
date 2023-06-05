@@ -17,7 +17,7 @@ use pocketmine\entity\Skin;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerQuitEvent;
 use pocketmine\network\mcpe\compression\ZlibCompressor;
-use pocketmine\network\mcpe\convert\GlobalItemTypeDictionary;
+use pocketmine\network\mcpe\convert\TypeConverter;
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\PacketPool;
 use pocketmine\network\mcpe\protocol\ProtocolInfo;
@@ -137,9 +137,10 @@ final class Loader extends PluginBase implements Listener{
 	public function addPlayer(FakePlayerInfo $info) : Promise{
 		$server = $this->getServer();
 		$network = $server->getNetwork();
-		$packet_serializer_context = new PacketSerializerContext(GlobalItemTypeDictionary::getInstance()->getDictionary());
+		$type_converter = TypeConverter::getInstance();
+		$packet_serializer_context = new PacketSerializerContext($type_converter->getItemTypeDictionary());
 		$packet_broadcaster = new StandardPacketBroadcaster($this->getServer(), $packet_serializer_context);
-		$entity_event_broadcaster = new StandardEntityEventBroadcaster($packet_broadcaster);
+		$entity_event_broadcaster = new StandardEntityEventBroadcaster($packet_broadcaster, $type_converter);
 
 		$internal_resolver = new PromiseResolver();
 		$session = new FakePlayerNetworkSession(
@@ -151,6 +152,7 @@ final class Loader extends PluginBase implements Listener{
 			$packet_broadcaster,
 			$entity_event_broadcaster,
 			ZlibCompressor::getInstance(),
+			$type_converter,
 			$server->getIp(),
 			$server->getPort(),
 			$internal_resolver
