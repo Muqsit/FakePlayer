@@ -43,6 +43,7 @@ use ReflectionMethod;
 use ReflectionProperty;
 use RuntimeException;
 use function array_merge;
+use function file_get_contents;
 
 final class Loader extends PluginBase implements Listener{
 
@@ -227,9 +228,8 @@ final class Loader extends PluginBase implements Listener{
 	public function addConfiguredPlayers() : array{
 		$players = json_decode(Filesystem::fileGetContents($this->getDataFolder() . "players.json"), true, 512, JSON_THROW_ON_ERROR);
 
-		$_skin_data = $this->getResource("skin.rgba");
-		$skin_data = stream_get_contents($_skin_data);
-		fclose($_skin_data);
+		$skin_data = file_get_contents($this->getResourcePath("skin.rgba"));
+		$skin_data !== false || throw new RuntimeException("Failed to read default skin data");
 		$skin = new Skin("Standard_Custom", $skin_data);
 
 		$promises = [];
