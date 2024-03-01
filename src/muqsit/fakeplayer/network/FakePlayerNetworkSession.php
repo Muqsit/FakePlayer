@@ -14,7 +14,6 @@ use pocketmine\network\mcpe\PacketBroadcaster;
 use pocketmine\network\mcpe\PacketSender;
 use pocketmine\network\mcpe\protocol\PacketPool;
 use pocketmine\network\mcpe\protocol\serializer\PacketSerializer;
-use pocketmine\network\mcpe\protocol\serializer\PacketSerializerContext;
 use pocketmine\network\NetworkSessionManager;
 use pocketmine\player\Player;
 use pocketmine\promise\PromiseResolver;
@@ -36,7 +35,6 @@ class FakePlayerNetworkSession extends NetworkSession{
 	 * @param Server $server
 	 * @param NetworkSessionManager $manager
 	 * @param PacketPool $packetPool
-	 * @param PacketSerializerContext $packetSerializerContext
 	 * @param PacketSender $sender
 	 * @param PacketBroadcaster $broadcaster
 	 * @param EntityEventBroadcaster $entityEventBroadcaster
@@ -49,7 +47,6 @@ class FakePlayerNetworkSession extends NetworkSession{
 		Server $server,
 		NetworkSessionManager $manager,
 		PacketPool $packetPool,
-		PacketSerializerContext $packetSerializerContext,
 		PacketSender $sender,
 		PacketBroadcaster $broadcaster,
 		EntityEventBroadcaster $entityEventBroadcaster,
@@ -59,7 +56,7 @@ class FakePlayerNetworkSession extends NetworkSession{
 		int $port,
 		PromiseResolver $player_add_resolver
 	){
-        parent::__construct($server, $manager, $packetPool, $packetSerializerContext, $sender, $broadcaster, $entityEventBroadcaster, $compressor, $typeConverter, $ip, $port);
+        parent::__construct($server, $manager, $packetPool, $sender, $broadcaster, $entityEventBroadcaster, $compressor, $typeConverter, $ip, $port);
 		$this->player_add_resolver = $player_add_resolver;
 
 		// do not store the resolver eternally
@@ -99,7 +96,7 @@ class FakePlayerNetworkSession extends NetworkSession{
 		$rp = new ReflectionProperty(NetworkSession::class, 'packetPool');
 		$packetPool = $rp->getValue($this);
 		$packet = $packetPool->getPacket($buffer);
-		$packet->decode(PacketSerializer::decoder($buffer, 0, $this->getPacketSerializerContext()));
+		$packet->decode(PacketSerializer::decoder($buffer, 0));
 		foreach($this->packet_listeners as $listener){
 			$listener->onPacketSend($packet, $this);
 		}
