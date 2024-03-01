@@ -23,7 +23,6 @@ use pocketmine\network\mcpe\protocol\PacketPool;
 use pocketmine\network\mcpe\protocol\ProtocolInfo;
 use pocketmine\network\mcpe\protocol\ResourcePackClientResponsePacket;
 use pocketmine\network\mcpe\protocol\serializer\PacketSerializer;
-use pocketmine\network\mcpe\protocol\serializer\PacketSerializerContext;
 use pocketmine\network\mcpe\protocol\types\DeviceOS;
 use pocketmine\network\mcpe\protocol\types\InputMode;
 use pocketmine\network\mcpe\protocol\types\login\ClientData;
@@ -139,8 +138,7 @@ final class Loader extends PluginBase implements Listener{
 		$server = $this->getServer();
 		$network = $server->getNetwork();
 		$type_converter = TypeConverter::getInstance();
-		$packet_serializer_context = new PacketSerializerContext($type_converter->getItemTypeDictionary());
-		$packet_broadcaster = new StandardPacketBroadcaster($this->getServer(), $packet_serializer_context);
+		$packet_broadcaster = new StandardPacketBroadcaster($this->getServer());
 		$entity_event_broadcaster = new StandardEntityEventBroadcaster($packet_broadcaster, $type_converter);
 
 		$internal_resolver = new PromiseResolver();
@@ -148,7 +146,6 @@ final class Loader extends PluginBase implements Listener{
 			$server,
 			$network->getSessionManager(),
 			PacketPool::getInstance(),
-			$packet_serializer_context,
 			new FakePacketSender(),
 			$packet_broadcaster,
 			$entity_event_broadcaster,
@@ -167,7 +164,7 @@ final class Loader extends PluginBase implements Listener{
 		$rp->invoke($session);
 
 		$packet = ResourcePackClientResponsePacket::create(ResourcePackClientResponsePacket::STATUS_COMPLETED, []);
-		$serializer = PacketSerializer::encoder($packet_serializer_context);
+		$serializer = PacketSerializer::encoder();
 		$packet->encode($serializer);
 		$session->handleDataPacket($packet, $serializer->getBuffer());
 

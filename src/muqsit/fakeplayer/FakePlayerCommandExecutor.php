@@ -11,13 +11,11 @@ use pocketmine\command\Command;
 use pocketmine\command\CommandExecutor;
 use pocketmine\command\CommandSender;
 use pocketmine\math\Vector3;
-use pocketmine\network\mcpe\convert\TypeConverter;
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\ClientboundPacket;
 use pocketmine\network\mcpe\protocol\ModalFormResponsePacket;
 use pocketmine\network\mcpe\protocol\Packet;
 use pocketmine\network\mcpe\protocol\serializer\PacketSerializer;
-use pocketmine\network\mcpe\protocol\serializer\PacketSerializerContext;
 use pocketmine\network\mcpe\protocol\TextPacket;
 use pocketmine\player\Player;
 use pocketmine\utils\TextFormat;
@@ -31,8 +29,7 @@ final class FakePlayerCommandExecutor implements CommandExecutor{
 	){}
 
 	private function sendServerPacket(Player $sender, Packet $packet) : void{
-		$context = new PacketSerializerContext(TypeConverter::getInstance()->getItemTypeDictionary());
-		$serializer = PacketSerializer::encoder($context);
+		$serializer = PacketSerializer::encoder();
 		$packet->encode($serializer);
 		$sender->getNetworkSession()->handleDataPacket($packet, $serializer->getBuffer());
 	}
