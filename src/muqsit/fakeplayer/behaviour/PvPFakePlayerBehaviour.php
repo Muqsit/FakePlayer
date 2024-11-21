@@ -62,8 +62,8 @@ class PvPFakePlayerBehaviour implements FakePlayerBehaviour{
 			if($motion->y == 0){
 				if($this->pvp_idle_time > 0 && $player->ticksLived - $this->last_movement > $this->pvp_idle_time){
 					$pos = $player->getSpawn()->asPosition();
-					$pos->x += 3 * (lcg_value() * 2 - 1);
-					$pos->z += 3 * (lcg_value() * 2 - 1);
+					$pos->x += 3 * ((mt_rand() / mt_getrandmax()) * 2 - 1);
+					$pos->z += 3 * ((mt_rand() / mt_getrandmax()) * 2 - 1);
 					$player->teleport($pos);
 					$this->last_movement = $player->ticksLived;
 					return;
@@ -104,8 +104,8 @@ class PvPFakePlayerBehaviour implements FakePlayerBehaviour{
 				if($nearest_entity !== null && $least_dist <= 256){
 					$nearest_player_pos = $nearest_entity->getPosition();
 					if($least_dist > ($nearest_entity->size->getWidth() + 6.25)){
-						$x = ($nearest_player_pos->x - $pos->x) + (lcg_value() * 2 - 1);
-						$z = ($nearest_player_pos->z - $pos->z) + (lcg_value() * 2 - 1);
+						$x = ($nearest_player_pos->x - $pos->x) + ((mt_rand() / mt_getrandmax()) * 2 - 1);
+						$z = ($nearest_player_pos->z - $pos->z) + ((mt_rand() / mt_getrandmax()) * 2 - 1);
 						$xz_modulus = sqrt($x * $x + $z * $z);
 						if($xz_modulus > 0.0){
 							$y = ($nearest_player_pos->y - $pos->y) / 16;
