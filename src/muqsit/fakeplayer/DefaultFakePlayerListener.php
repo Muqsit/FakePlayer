@@ -7,13 +7,13 @@ namespace muqsit\fakeplayer;
 use muqsit\fakeplayer\listener\FakePlayerListener;
 use muqsit\fakeplayer\network\FakePlayerNetworkSession;
 use muqsit\fakeplayer\network\listener\ClosureFakePlayerPacketListener;
+use pmmp\encoding\ByteBufferWriter;
 use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\ChangeDimensionPacket;
 use pocketmine\network\mcpe\protocol\ClientboundPacket;
 use pocketmine\network\mcpe\protocol\PlayerActionPacket;
 use pocketmine\network\mcpe\protocol\PlayStatusPacket;
 use pocketmine\network\mcpe\protocol\RespawnPacket;
-use pocketmine\network\mcpe\protocol\serializer\PacketSerializer;
 use pocketmine\network\mcpe\protocol\SetLocalPlayerAsInitializedPacket;
 use pocketmine\network\mcpe\protocol\types\BlockPosition;
 use pocketmine\network\mcpe\protocol\types\PlayerAction;
@@ -37,9 +37,9 @@ final class DefaultFakePlayerListener implements FakePlayerListener{
 				$this->plugin->getScheduler()->scheduleDelayedTask(new ClosureTask(static function() use($session, $entity_runtime_id) : void{
 					if($session->isConnected()){
 						$packet = SetLocalPlayerAsInitializedPacket::create($entity_runtime_id);
-						$serializer = PacketSerializer::encoder();
+						$serializer = new ByteBufferWriter();
 						$packet->encode($serializer);
-						$session->handleDataPacket($packet, $serializer->getBuffer());
+						$session->handleDataPacket($packet, $serializer->getData());
 					}
 				}), 40);
 			}
@@ -72,9 +72,9 @@ final class DefaultFakePlayerListener implements FakePlayerListener{
 							0
 						);
 
-						$serializer = PacketSerializer::encoder();
+						$serializer = new ByteBufferWriter();
 						$packet->encode($serializer);
-						$session->handleDataPacket($packet, $serializer->getBuffer());
+						$session->handleDataPacket($packet, $serializer->getData());
 					}
 				}
 			}), 40);

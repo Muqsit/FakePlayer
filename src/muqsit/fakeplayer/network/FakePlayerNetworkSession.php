@@ -6,6 +6,7 @@ namespace muqsit\fakeplayer\network;
 
 use muqsit\fakeplayer\network\listener\FakePlayerPacketListener;
 use muqsit\fakeplayer\network\listener\FakePlayerSpecificPacketListener;
+use pmmp\encoding\ByteBufferReader;
 use pocketmine\network\mcpe\compression\Compressor;
 use pocketmine\network\mcpe\convert\TypeConverter;
 use pocketmine\network\mcpe\EntityEventBroadcaster;
@@ -13,7 +14,6 @@ use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\PacketBroadcaster;
 use pocketmine\network\mcpe\PacketSender;
 use pocketmine\network\mcpe\protocol\PacketPool;
-use pocketmine\network\mcpe\protocol\serializer\PacketSerializer;
 use pocketmine\network\NetworkSessionManager;
 use pocketmine\player\Player;
 use pocketmine\promise\PromiseResolver;
@@ -96,7 +96,7 @@ class FakePlayerNetworkSession extends NetworkSession{
 		$rp = new ReflectionProperty(NetworkSession::class, 'packetPool');
 		$packetPool = $rp->getValue($this);
 		$packet = $packetPool->getPacket($buffer);
-		$packet->decode(PacketSerializer::decoder($buffer, 0));
+		$packet->decode(new ByteBufferReader($buffer));
 		foreach($this->packet_listeners as $listener){
 			$listener->onPacketSend($packet, $this);
 		}

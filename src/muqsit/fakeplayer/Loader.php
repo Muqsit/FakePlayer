@@ -12,6 +12,7 @@ use muqsit\fakeplayer\behaviour\internal\UpdateMovementInternalFakePlayerBehavio
 use muqsit\fakeplayer\info\FakePlayerInfo;
 use muqsit\fakeplayer\listener\FakePlayerListener;
 use muqsit\fakeplayer\network\FakePlayerNetworkSession;
+use pmmp\encoding\ByteBufferWriter;
 use pocketmine\command\PluginCommand;
 use pocketmine\entity\Skin;
 use pocketmine\event\Listener;
@@ -22,10 +23,9 @@ use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\PacketPool;
 use pocketmine\network\mcpe\protocol\ProtocolInfo;
 use pocketmine\network\mcpe\protocol\ResourcePackClientResponsePacket;
-use pocketmine\network\mcpe\protocol\serializer\PacketSerializer;
 use pocketmine\network\mcpe\protocol\types\DeviceOS;
 use pocketmine\network\mcpe\protocol\types\InputMode;
-use pocketmine\network\mcpe\protocol\types\login\ClientData;
+use pocketmine\network\mcpe\protocol\types\login\clientdata\ClientData;
 use pocketmine\network\mcpe\StandardEntityEventBroadcaster;
 use pocketmine\network\mcpe\StandardPacketBroadcaster;
 use pocketmine\player\Player;
@@ -164,9 +164,9 @@ final class Loader extends PluginBase implements Listener{
 		$rp->invoke($session);
 
 		$packet = ResourcePackClientResponsePacket::create(ResourcePackClientResponsePacket::STATUS_COMPLETED, []);
-		$serializer = PacketSerializer::encoder();
+		$serializer = new ByteBufferWriter();
 		$packet->encode($serializer);
-		$session->handleDataPacket($packet, $serializer->getBuffer());
+		$session->handleDataPacket($packet, $serializer->getData());
 
 		$internal_resolver->getPromise()->onCompletion(function(Player $player) use($info, $session) : void{
 			$player->setViewDistance(4);

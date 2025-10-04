@@ -7,6 +7,7 @@ namespace muqsit\fakeplayer;
 use JsonException;
 use muqsit\fakeplayer\network\FakePlayerNetworkSession;
 use muqsit\fakeplayer\network\listener\ClosureFakePlayerPacketListener;
+use pmmp\encoding\ByteBufferWriter;
 use pocketmine\command\Command;
 use pocketmine\command\CommandExecutor;
 use pocketmine\command\CommandSender;
@@ -15,7 +16,6 @@ use pocketmine\network\mcpe\NetworkSession;
 use pocketmine\network\mcpe\protocol\ClientboundPacket;
 use pocketmine\network\mcpe\protocol\ModalFormResponsePacket;
 use pocketmine\network\mcpe\protocol\Packet;
-use pocketmine\network\mcpe\protocol\serializer\PacketSerializer;
 use pocketmine\network\mcpe\protocol\TextPacket;
 use pocketmine\player\Player;
 use pocketmine\utils\TextFormat;
@@ -31,9 +31,9 @@ final class FakePlayerCommandExecutor implements CommandExecutor{
 	){}
 
 	private function sendServerPacket(Player $sender, Packet $packet) : void{
-		$serializer = PacketSerializer::encoder();
+		$serializer = new ByteBufferWriter();
 		$packet->encode($serializer);
-		$sender->getNetworkSession()->handleDataPacket($packet, $serializer->getBuffer());
+		$sender->getNetworkSession()->handleDataPacket($packet, $serializer->getData());
 	}
 
 	public function onCommand(CommandSender $sender, Command $command, string $label, array $args) : bool{
