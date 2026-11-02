@@ -26,6 +26,7 @@ use pocketmine\network\mcpe\protocol\ResourcePackClientResponsePacket;
 use pocketmine\network\mcpe\protocol\types\DeviceOS;
 use pocketmine\network\mcpe\protocol\types\InputMode;
 use pocketmine\network\mcpe\protocol\types\login\clientdata\ClientData;
+use pocketmine\network\mcpe\protocol\types\ResourcePackClientResponseStatus;
 use pocketmine\network\mcpe\StandardEntityEventBroadcaster;
 use pocketmine\network\mcpe\StandardPacketBroadcaster;
 use pocketmine\player\Player;
@@ -58,8 +59,8 @@ final class Loader extends PluginBase implements Listener{
 
 	/** @var array<string, mixed> */
 	private array $default_extra_data = [
-		"CurrentInputMode" => InputMode::MOUSE_KEYBOARD, /** @see ClientData::$CurrentInputMode */
-		"DefaultInputMode" => InputMode::MOUSE_KEYBOARD, /** @see ClientData::$DefaultInputMode */
+		"CurrentInputMode" => InputMode::MOUSE_KEYBOARD->value, /** @see ClientData::$CurrentInputMode */
+		"DefaultInputMode" => InputMode::MOUSE_KEYBOARD->value, /** @see ClientData::$DefaultInputMode */
 		"DeviceOS" => DeviceOS::DEDICATED, /** @see ClientData::$DeviceOS */
 		"GameVersion" => ProtocolInfo::MINECRAFT_VERSION_NETWORK, /** @see ClientData::$GameVersion */
 	];
@@ -165,7 +166,7 @@ final class Loader extends PluginBase implements Listener{
 		$rp = new ReflectionMethod(NetworkSession::class, "onServerLoginSuccess");
 		$rp->invoke($session);
 
-		$packet = ResourcePackClientResponsePacket::create(ResourcePackClientResponsePacket::STATUS_COMPLETED, []);
+		$packet = ResourcePackClientResponsePacket::create(ResourcePackClientResponseStatus::COMPLETED, []);
 		$serializer = new ByteBufferWriter();
 		$packet->encode($serializer);
 		$session->handleDataPacket($packet, $serializer->getData());
